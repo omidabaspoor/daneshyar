@@ -261,8 +261,8 @@ include __DIR__ . '/includes/header.php';
         <div class="stb-left">
           <?= icon('clock') ?>
           <div>
-            <div class="stb-title">می‌خوای اشتراک بعداً شروع شه؟</div>
-            <div class="stb-sub" id="schedSubText">همین لحظه تایید فعال می‌شه</div>
+            <div class="stb-title">زمان شروع اشتراک</div>
+            <div class="stb-sub" id="schedSubText">بعد از تایید ادمین فعال می‌شه</div>
           </div>
         </div>
         <div class="stb-switch" id="schedSwitch">
@@ -272,40 +272,44 @@ include __DIR__ . '/includes/header.php';
 
       <!-- پنل زمان‌بندی -->
       <div class="schedule-panel" id="schedPanel">
+
+        <!-- میانبرهای سریع -->
+        <div class="sched-quick-label">⚡ شروع سریع:</div>
+        <div class="sched-quick-btns" id="schedQuickBtns">
+          <button type="button" class="sq-btn" onclick="quickSelect('now')">همین الان</button>
+          <button type="button" class="sq-btn" onclick="quickSelect('tomorrow8')">فردا ۸ صبح</button>
+          <button type="button" class="sq-btn" onclick="quickSelect('tomorrow14')">فردا ۲ بعدازظهر</button>
+        </div>
+
+        <div class="sched-divider"><span>یا انتخاب دستی</span></div>
+
         <div class="sched-grid">
 
           <div class="sched-col sched-col-date">
             <label class="sched-label">روز شروع</label>
-            <div class="sched-days" id="schedDays">
+            <select class="sched-select" id="jalaliDateSelect" onchange="onDateSelectChange()">
               <?php foreach ($futureDays as $i => $day): ?>
-              <button type="button"
-                class="sched-day-btn <?= $i===0?'selected':'' ?>"
-                data-val="<?= e($day['val']) ?>"
-                onclick="selectDay(this, '<?= e($day['val']) ?>', '<?= e($day['label']) ?>')">
+              <option value="<?= e($day['val']) ?>" data-label="<?= e($day['label']) ?>" <?= $i===0?'selected':'' ?>>
                 <?= e($day['label']) ?>
-              </button>
+              </option>
               <?php endforeach; ?>
-            </div>
+            </select>
           </div>
 
           <div class="sched-col sched-col-time">
             <label class="sched-label">ساعت شروع</label>
-            <div class="time-picker">
-              <div class="time-drum" id="hourDrum">
+            <div class="time-selects">
+              <select class="sched-select sched-select-inline" id="hourSelect" onchange="onTimeChange()">
                 <?php for($h=0;$h<24;$h++): ?>
-                  <div class="td-item <?= $h==8?'active':'' ?>" data-val="<?= $h ?>" onclick="selectHour(<?= $h ?>)">
-                    <?= num_fa(sprintf('%02d',$h)) ?>
-                  </div>
+                  <option value="<?= $h ?>" <?= $h==8?'selected':'' ?>><?= num_fa(sprintf('%02d',$h)) ?></option>
                 <?php endfor; ?>
-              </div>
-              <div class="time-sep">:</div>
-              <div class="time-drum" id="minDrum">
+              </select>
+              <span class="time-sep">:</span>
+              <select class="sched-select sched-select-inline" id="minSelect" onchange="onTimeChange()">
                 <?php foreach([0,15,30,45] as $m): ?>
-                  <div class="td-item <?= $m==0?'active':'' ?>" data-val="<?= $m ?>" onclick="selectMin(<?= $m ?>)">
-                    <?= num_fa(sprintf('%02d',$m)) ?>
-                  </div>
+                  <option value="<?= $m ?>" <?= $m==0?'selected':'' ?>><?= num_fa(sprintf('%02d',$m)) ?></option>
                 <?php endforeach; ?>
-              </div>
+              </select>
             </div>
           </div>
         </div>
@@ -674,6 +678,114 @@ include __DIR__ . '/includes/header.php';
 
 /* آیکون info */
 .ico-info-inline { color:var(--text-dim); }
+
+/* ============================================================
+   زمان‌بندی ساده‌شده
+   ============================================================ */
+
+/* میانبرهای سریع */
+.sched-quick-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+  display: block;
+}
+.sched-quick-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.sq-btn {
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.04);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: .15s;
+}
+.sq-btn:hover {
+  border-color: var(--border-orange);
+  background: var(--orange-soft);
+  color: var(--orange);
+}
+.sq-btn.active {
+  background: linear-gradient(135deg, var(--orange), var(--orange-2));
+  color: #1a0e05;
+  border-color: transparent;
+  font-weight: 800;
+}
+
+/* divider */
+.sched-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.sched-divider::before,
+.sched-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* select‌ها */
+.sched-select {
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(0,0,0,.35);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%23eb7c2a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 12px center;
+  padding-left: 34px;
+}
+.sched-select:focus {
+  outline: none;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(235,124,42,.15);
+}
+.sched-select option {
+  background: #1a1a2e;
+  color: var(--text);
+}
+
+.time-selects {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sched-select-inline {
+  width: auto;
+  flex: 1;
+  min-width: 70px;
+  text-align: center;
+  background-position: left 8px center;
+  padding-left: 28px;
+  padding-right: 10px;
+}
+
+/* toggle text update */
+.schedule-toggle-btn.active .stb-sub {
+  color: var(--orange) !important;
+}
 </style>
 
 <script>
@@ -785,39 +897,94 @@ function toggleSchedule() {
 
   if (schedActive) {
     updateSchedResult();
-    document.getElementById('stb-sub') && (document.getElementById('stb-sub').textContent='زمان شروع انتخاب کن');
+    document.getElementById('schedSubText').textContent = 'زمان دلخواه انتخاب شده';
   } else {
-    document.getElementById('schedSubText').textContent = 'همین لحظه تایید فعال می‌شه';
+    document.getElementById('schedSubText').textContent = 'بعد از تایید ادمین فعال می‌شه';
   }
 }
 
-function selectDay(btn, val, label) {
-  document.querySelectorAll('.sched-day-btn').forEach(function(b){ b.classList.remove('selected'); });
-  btn.classList.add('selected');
-  selectedDay   = val;
-  selectedDayLabel = label;
-  document.getElementById('jalaliDate').value = val;
+/* ——— میانبرهای سریع ——— */
+function quickSelect(type) {
+  // روشن کردن toggle اگه خاموشه
+  if (!schedActive) toggleSchedule();
+
+  // حذف active از همه
+  document.querySelectorAll('.sq-btn').forEach(function(b){ b.classList.remove('active'); });
+
+  if (type === 'now') {
+    // امروز + ساعت فعلی + ۱۰ دقیقه
+    var now = new Date();
+    var h = now.getHours();
+    var m = Math.ceil(now.getMinutes() / 15) * 15;
+    if (m >= 60) { h = (h + 1) % 24; m = 0; }
+    selectedHour = h;
+    selectedMin  = m;
+    document.getElementById('hourSelect').value = h;
+    document.getElementById('minSelect').value  = m;
+
+    // انتخاب «امروز»
+    var todaySelect = document.getElementById('jalaliDateSelect');
+    todaySelect.selectedIndex = 0;
+    selectedDay = todaySelect.value;
+    selectedDayLabel = todaySelect.options[0].getAttribute('data-label');
+    document.getElementById('jalaliDate').value = selectedDay;
+    document.getElementById('hiddenHour').value = h;
+    document.getElementById('hiddenMin').value  = m;
+  }
+  else if (type === 'tomorrow8') {
+    selectedHour = 8;  selectedMin = 0;
+    document.getElementById('hourSelect').value = 8;
+    document.getElementById('minSelect').value  = 0;
+    var opts = document.getElementById('jalaliDateSelect').options;
+    if (opts.length > 1) {
+      document.getElementById('jalaliDateSelect').selectedIndex = 1;
+      selectedDay = opts[1].value;
+      selectedDayLabel = opts[1].getAttribute('data-label');
+    }
+    document.getElementById('jalaliDate').value = selectedDay;
+    document.getElementById('hiddenHour').value = 8;
+    document.getElementById('hiddenMin').value  = 0;
+  }
+  else if (type === 'tomorrow14') {
+    selectedHour = 14;  selectedMin = 0;
+    document.getElementById('hourSelect').value = 14;
+    document.getElementById('minSelect').value  = 0;
+    var opts2 = document.getElementById('jalaliDateSelect').options;
+    if (opts2.length > 1) {
+      document.getElementById('jalaliDateSelect').selectedIndex = 1;
+      selectedDay = opts2[1].value;
+      selectedDayLabel = opts2[1].getAttribute('data-label');
+    }
+    document.getElementById('jalaliDate').value = selectedDay;
+    document.getElementById('hiddenHour').value = 14;
+    document.getElementById('hiddenMin').value  = 0;
+  }
+
+  // فعال کردن دکمه
+  event.target.classList.add('active');
   updateSchedResult();
 }
 
-function selectHour(h) {
-  selectedHour = h;
-  document.querySelectorAll('#hourDrum .td-item').forEach(function(el){
-    el.classList.toggle('active', parseInt(el.dataset.val) === h);
-  });
-  document.getElementById('hiddenHour').value = h;
-  // scroll به مرکز
-  var active = document.querySelector('#hourDrum .td-item.active');
-  if (active) active.scrollIntoView({block:'center',behavior:'smooth'});
+/* ——— تغییر select ها ——— */
+function onDateSelectChange() {
+  var sel = document.getElementById('jalaliDateSelect');
+  selectedDay = sel.value;
+  selectedDayLabel = sel.options[sel.selectedIndex].getAttribute('data-label');
+  document.getElementById('jalaliDate').value = selectedDay;
+
+  // پاک کردن active میانبرها
+  document.querySelectorAll('.sq-btn').forEach(function(b){ b.classList.remove('active'); });
   updateSchedResult();
 }
 
-function selectMin(m) {
-  selectedMin = m;
-  document.querySelectorAll('#minDrum .td-item').forEach(function(el){
-    el.classList.toggle('active', parseInt(el.dataset.val) === m);
-  });
-  document.getElementById('hiddenMin').value = m;
+function onTimeChange() {
+  selectedHour = parseInt(document.getElementById('hourSelect').value);
+  selectedMin  = parseInt(document.getElementById('minSelect').value);
+  document.getElementById('hiddenHour').value = selectedHour;
+  document.getElementById('hiddenMin').value  = selectedMin;
+
+  // پاک کردن active میانبرها
+  document.querySelectorAll('.sq-btn').forEach(function(b){ b.classList.remove('active'); });
   updateSchedResult();
 }
 
@@ -826,12 +993,6 @@ function updateSchedResult() {
   document.getElementById('schedResultText').textContent = txt;
   document.getElementById('schedSubText').textContent = txt;
 }
-
-// scroll ساعت پیش‌فرض
-setTimeout(function(){
-  var def = document.querySelector('#hourDrum .td-item.active');
-  if (def) def.scrollIntoView({block:'center'});
-}, 100);
 
 /* ========== ولیدیشن ========== */
 document.getElementById('payForm').addEventListener('submit', function(e){

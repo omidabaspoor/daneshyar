@@ -76,6 +76,7 @@ include __DIR__ . '/includes/header.php';
         <li>دسترسی به کتاب‌های پایه و رشته خودت</li>
         <li>تحلیل عکس و PDF</li>
         <li>پاسخ گام‌به‌گام</li>
+        <li class="plan-feat-highlight"><?= icon('clock') ?> زمان شروع دلخواه</li>
       </ul>
 
       <?php if ($user): ?>
@@ -93,11 +94,44 @@ include __DIR__ . '/includes/header.php';
   <?php endforeach; ?>
 </div>
 
-<div class="glass" style="padding:18px 20px; max-width:760px; margin:30px auto; text-align:center">
+<!-- ===== قابلیت زمان‌بندی ===== -->
+<div class="glass schedule-info-card" style="max-width:760px; margin:0 auto 30px; padding:24px 22px; position:relative; overflow:visible;">
+  <div class="sched-info-badge"><?= icon('clock') ?> زمان شروع دلخواه</div>
+  <h3 style="font-size:17px; font-weight:800; margin-bottom:8px; margin-top:14px;">می‌خوای اشتراکت رو بعداً شروع کنی؟</h3>
+  <p style="color:var(--text-dim); font-size:13.5px; line-height:1.9; margin-bottom:16px;">
+    وقتی خرید می‌کنی، می‌تونی <b style="color:var(--text)">دقیقاً مشخص کنی اشتراکت از چه روز و ساعتی فعال بشه</b>. مثلاً الان بخری و بگی «از شنبه صبح ساعت ۸ شروع شه». 
+    اینجوری اگه الان وقت نداری یا مثلاً وسط هفته‌ای و می‌خوای از اول هفته شروع کنی، راحت می‌تونی تنظیمش کنی!
+  </p>
+  <div class="sched-info-steps">
+    <div class="sched-info-step">
+      <div class="sis-num">1</div>
+      <div class="sis-text">پلن رو انتخاب کن</div>
+    </div>
+    <div class="sis-arrow"><?= icon('arrow-left') ?></div>
+    <div class="sched-info-step">
+      <div class="sis-num">2</div>
+      <div class="sis-text">رسید کارت‌به‌کارت آپلود کن</div>
+    </div>
+    <div class="sis-arrow"><?= icon('arrow-left') ?></div>
+    <div class="sched-info-step">
+      <div class="sis-num">3</div>
+      <div class="sis-text">روز و ساعت شروع رو انتخاب کن</div>
+    </div>
+    <div class="sis-arrow"><?= icon('arrow-left') ?></div>
+    <div class="sched-info-step">
+      <div class="sis-num">4</div>
+      <div class="sis-text">سیستم خودکار فعالش می‌کنه ✅</div>
+    </div>
+  </div>
+</div>
+
+<div class="glass" style="padding:18px 20px; max-width:760px; margin:0 auto 30px; text-align:center">
   <p style="color:var(--text-dim); font-size:13px; display:flex; align-items:center; justify-content:center; gap:8px">
     <?= icon('shield') ?>
     پرداخت از طریق کارت به کارت – پس از تایید ادمین اشتراک فعال می‌شه. درگاه آنلاین به زودی اضافه می‌شه.
   </p>
 </div>
+
+
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
