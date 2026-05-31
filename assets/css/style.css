@@ -1434,3 +1434,70 @@ body.has-chat .app-main {
   transform: scale(1.05);
   box-shadow: 0 6px 20px rgba(235,124,42,.5) !important;
 }
+
+/* ============================================================
+   Schedule Info Card (صفحه قیمت‌ها)
+   ============================================================ */
+.schedule-info-card { position: relative; }
+.sched-info-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, rgba(77,171,247,.15), rgba(77,171,247,.05));
+  border: 1px solid rgba(77,171,247,.3);
+  color: var(--info);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.sched-info-badge .ico { width: 14px; height: 14px; }
+.sched-info-card h3 { color: var(--text); }
+.sched-info-card p b { color: var(--text); }
+.sched-info-steps {
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap; justify-content: center;
+  padding: 14px 0 0;
+}
+.sched-info-step {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-width: 100px;
+  transition: .2s;
+}
+.sched-info-step:hover {
+  border-color: var(--border-orange);
+  background: var(--orange-soft);
+}
+.sis-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), var(--orange-2));
+  color: #1a0e05;
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 900;
+}
+.sis-text { font-size: 11.5px; color: var(--text-dim); text-align: center; line-height: 1.5; }
+.sis-arrow { color: var(--orange); font-size: 14px; }
+.sis-arrow .ico { width: 16px; height: 16px; }
+
+@media (max-width: 720px) {
+  .sched-info-steps { flex-direction: column; align-items: stretch; gap: 6px; }
+  .sis-arrow { transform: rotate(90deg); text-align: center; }
+  .sched-info-step { min-width: auto; flex-direction: row; gap: 10px; padding: 12px 14px; }
+  .sis-text { text-align: right; }
+}
+
+/* ============================================================
+   Plan Feature Highlight (زمان شروع دلخواه)
+   ============================================================ */
+.plan-feat-highlight {
+  color: var(--info) !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
+.plan-feat-highlight .ico {
+  width: 15px; height: 15px;
+  color: var(--info) !important;
+}
