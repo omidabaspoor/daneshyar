@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /includes/
+Sitemap: http://194.60.230.149/sitemap.xml
