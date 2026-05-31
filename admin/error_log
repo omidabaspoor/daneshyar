@@ -1,0 +1,4 @@
+[31-May-2026 11:15:57 UTC] PHP Parse error:  syntax error, unexpected identifier "COALESCE", expecting ")" in /home/pisteyar/public_html/app/admin/books.php on line 100
+[31-May-2026 11:15:59 UTC] PHP Parse error:  syntax error, unexpected identifier "COALESCE", expecting ")" in /home/pisteyar/public_html/app/admin/books.php on line 100
+[31-May-2026 11:17:04 UTC] PHP Parse error:  syntax error, unexpected identifier "COALESCE", expecting ")" in /home/pisteyar/public_html/app/admin/books.php on line 100
+[31-May-2026 11:17:07 UTC] PHP Parse error:  syntax error, unexpected identifier "COALESCE", expecting ")" in /home/pisteyar/public_html/app/admin/books.php on line 100
