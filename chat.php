@@ -5,8 +5,8 @@ require_login();
 $user = current_user();
 $page = 'chat';
 $pageTitle = 'چت';
-$extraCss = ['chat.css'];
-$bodyClass = 'has-chat';
+$extraCss = ['chat.css?v=21'];
+$bodyClass = 'has-chat?v=21';
 $hideSiteChrome = true;
 $fullWidthMain = true;
 
@@ -48,6 +48,24 @@ if ($sub['active']) {
     elseif (($sub['limit_hit'] ?? '') === 'daily') $subState = 'limit_daily';
     elseif (($sub['limit_hit'] ?? '') === 'total') $subState = 'limit_total';
     elseif (!empty($sub['starts_in']))           $subState = 'not_started';
+}
+
+$schedulePromoTitle = $subState === 'active'
+    ? 'تمدید را از الان بخر، بعداً شروعش کن'
+    : 'الان بخر، هر زمان خواستی شروعش کن';
+
+$schedulePromoText = $subState === 'active'
+    ? 'اگر می‌خواهی اشتراک بعدی‌ات دقیقاً بعد از این پلن شروع شود، موقع خرید روز و ساعت فعال‌سازی را خودت تعیین کن.'
+    : 'موقع خرید، روز و ساعت شروع اشتراک را خودت مشخص می‌کنی؛ مثلاً شنبه ساعت ۸ صبح.';
+
+if ($subState === 'active') {
+    $schedulePromoCta = 'خرید اشتراک بعدی با زمان‌بندی';
+} elseif ($subState === 'expired') {
+    $schedulePromoCta = 'تمدید اشتراک با زمان‌بندی';
+} elseif ($subState === 'limit_total') {
+    $schedulePromoCta = 'خرید پلن جدید با زمان‌بندی';
+} else {
+    $schedulePromoCta = 'خرید اشتراک با زمان‌بندی';
 }
 
 include __DIR__ . '/includes/header.php';
@@ -135,12 +153,18 @@ include __DIR__ . '/includes/header.php';
         </div>
       <?php endif; ?>
 
-      <?php if ($subState !== 'active'): ?>
-        <a href="<?= BASE_URL ?>/pricing.php" class="btn-upgrade">
-          <?= icon('rocket') ?>
-          <span><?= $subState === 'expired' ? 'تمدید اشتراک' : ($subState === 'limit_total' ? 'خرید پلن جدید' : 'دسترسی نامحدود') ?></span>
-        </a>
-      <?php endif; ?>
+      <div class="sub-schedule-inline">
+        <div class="sub-schedule-badge"><?= icon('clock') ?> خرید با زمان شروع دلخواه</div>
+        <div class="sub-schedule-copy">
+          <b><?= e($schedulePromoTitle) ?></b>
+          <small><?= e($schedulePromoText) ?></small>
+        </div>
+      </div>
+
+      <a href="<?= BASE_URL ?>/pricing.php" class="btn-upgrade sub-card-cta">
+        <?= icon($subState === 'active' ? 'wallet' : 'rocket') ?>
+        <span><?= e($schedulePromoCta) ?></span>
+      </a>
     </div>
 
     <?php if (!empty($notices)): ?>
@@ -441,6 +465,6 @@ include __DIR__ . '/includes/header.php';
     activeBookId: '<?= e($activeBookId) ?>'
   };
 </script>
-<script defer src="<?= BASE_URL ?>/assets/js/chat.js?v=21"></script>
+<script defer src="<?= BASE_URL ?>/assets/js/chat.js?v=22"></script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
