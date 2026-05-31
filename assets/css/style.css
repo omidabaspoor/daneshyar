@@ -1436,11 +1436,124 @@ body.has-chat .app-main {
 }
 
 /* ============================================================
+   Pricing Page – Schedule clarity + responsive layout
+   ============================================================ */
+.pricing-hero {
+  text-align: center;
+  padding: 30px 0 12px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.pricing-hero-badge { margin-bottom: 14px; }
+.pricing-hero h1 {
+  font-size: clamp(28px, 4vw, 38px);
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+.pricing-hero p {
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.pricing-schedule-banner {
+  max-width: 980px;
+  margin: 0 auto 18px;
+  padding: 22px 20px;
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 16px;
+  align-items: center;
+  border-color: rgba(77,171,247,.24);
+  background:
+    radial-gradient(circle at top left, rgba(77,171,247,.12), transparent 36%),
+    linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.02) 58%);
+}
+.pricing-schedule-copy h2 {
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.4;
+  margin: 10px 0 10px;
+}
+.pricing-schedule-copy p {
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.95;
+}
+.pricing-schedule-copy p b { color: var(--text); }
+.pricing-schedule-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(77,171,247,.10);
+  border: 1px solid rgba(77,171,247,.28);
+  color: var(--info);
+  font-size: 12px;
+  font-weight: 800;
+}
+.pricing-schedule-eyebrow .ico { width: 14px; height: 14px; }
+.pricing-schedule-points {
+  display: grid;
+  gap: 10px;
+}
+.pricing-schedule-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.045);
+  border: 1px solid var(--border);
+  color: var(--text);
+  min-width: 0;
+}
+.pricing-schedule-point .ico {
+  width: 18px;
+  height: 18px;
+  color: var(--success);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.pricing-schedule-point span {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-dim);
+}
+
+/* ============================================================
    Schedule Info Card (صفحه قیمت‌ها)
    ============================================================ */
-.schedule-info-card { position: relative; }
+.schedule-info-card {
+  max-width: 980px;
+  margin: 0 auto 26px;
+  padding: 24px 22px;
+  position: relative;
+  overflow: visible;
+}
+.schedule-explainer-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.schedule-explainer-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, rgba(77,171,247,.18), rgba(77,171,247,.06));
+  border: 1px solid rgba(77,171,247,.30);
+  color: var(--info);
+  box-shadow: 0 10px 24px rgba(77,171,247,.12);
+}
+.schedule-explainer-icon .ico { width: 24px; height: 24px; }
+.schedule-explainer-copy { min-width: 0; }
 .sched-info-badge {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: linear-gradient(135deg, rgba(77,171,247,.15), rgba(77,171,247,.05));
   border: 1px solid rgba(77,171,247,.3);
   color: var(--info);
@@ -1450,43 +1563,172 @@ body.has-chat .app-main {
   font-weight: 700;
 }
 .sched-info-badge .ico { width: 14px; height: 14px; }
-.sched-info-card h3 { color: var(--text); }
-.sched-info-card p b { color: var(--text); }
+.schedule-info-card h3 {
+  color: var(--text);
+  font-size: clamp(20px, 3vw, 27px);
+  line-height: 1.45;
+  margin: 12px 0 8px;
+}
+.schedule-info-card p,
+.schedule-faq-item p {
+  color: var(--text-dim);
+  font-size: 13.5px;
+  line-height: 1.95;
+}
+.schedule-info-card p b,
+.schedule-example-box strong,
+.schedule-faq-item b { color: var(--text); }
+
+.schedule-example-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(56,217,169,.08);
+  border: 1px solid rgba(56,217,169,.22);
+}
+.schedule-example-box b {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--success);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.schedule-example-box b .ico { width: 15px; height: 15px; }
+.schedule-example-box span {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.9;
+}
+
 .sched-info-steps {
-  display: flex; align-items: center; gap: 8px;
-  flex-wrap: wrap; justify-content: center;
-  padding: 14px 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 18px;
 }
 .sched-info-step {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
   background: rgba(255,255,255,.04);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  min-width: 100px;
+  border-radius: 16px;
   transition: .2s;
+  min-width: 0;
 }
 .sched-info-step:hover {
   border-color: var(--border-orange);
-  background: var(--orange-soft);
+  background: rgba(235,124,42,.08);
+  transform: translateY(-2px);
 }
 .sis-num {
-  width: 24px; height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--orange), var(--orange-2));
   color: #1a0e05;
-  display: grid; place-items: center;
-  font-size: 12px; font-weight: 900;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 900;
+  flex-shrink: 0;
 }
-.sis-text { font-size: 11.5px; color: var(--text-dim); text-align: center; line-height: 1.5; }
-.sis-arrow { color: var(--orange); font-size: 14px; }
-.sis-arrow .ico { width: 16px; height: 16px; }
+.sis-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sis-title {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+.sis-text {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
 
-@media (max-width: 720px) {
-  .sched-info-steps { flex-direction: column; align-items: stretch; gap: 6px; }
-  .sis-arrow { transform: rotate(90deg); text-align: center; }
-  .sched-info-step { min-width: auto; flex-direction: row; gap: 10px; padding: 12px 14px; }
-  .sis-text { text-align: right; }
+.schedule-faq-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.schedule-faq-item {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid var(--border);
+}
+.schedule-faq-item b {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+  line-height: 1.7;
+}
+
+.payment-note-card {
+  padding: 18px 20px;
+  max-width: 980px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+.payment-note-text {
+  color: var(--text-dim);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1.9;
+}
+.payment-note-text .ico {
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+@media (max-width: 920px) {
+  .pricing-schedule-banner {
+    grid-template-columns: 1fr;
+    padding: 20px 18px;
+  }
+  .sched-info-steps {
+    grid-template-columns: 1fr 1fr;
+  }
+  .schedule-faq-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .pricing-hero { padding-top: 20px; }
+  .pricing-hero p,
+  .pricing-schedule-copy p { font-size: 13px; }
+  .schedule-explainer-head {
+    grid-template-columns: 1fr;
+  }
+  .schedule-explainer-icon {
+    width: 52px;
+    height: 52px;
+  }
+  .schedule-example-box {
+    flex-direction: column;
+  }
+  .sched-info-steps {
+    grid-template-columns: 1fr;
+  }
+  .payment-note-text {
+    align-items: flex-start;
+    text-align: right;
+  }
 }
 
 /* ============================================================
@@ -1498,6 +1740,472 @@ body.has-chat .app-main {
   font-size: 13px !important;
 }
 .plan-feat-highlight .ico {
-  width: 15px; height: 15px;
+  width: 15px;
+  height: 15px;
   color: var(--info) !important;
+}
+.plan-schedule-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-dim);
+}
+.plan-schedule-note .ico {
+  width: 14px;
+  height: 14px;
+  color: var(--info);
+}
+
+/* ============================================================
+   Pricing v2 – mobile slider + book style cards
+   ============================================================ */
+.pricing-hero {
+  max-width: 760px;
+  padding: 24px 0 10px;
+}
+.pricing-hero p {
+  max-width: 620px;
+  margin: 0 auto;
+}
+.pricing-hero p b { color: var(--text); }
+
+.pricing-page-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 980px;
+  margin: 10px auto 14px;
+}
+.pricing-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.045);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.pricing-pill .ico { width: 14px; height: 14px; color: var(--orange); }
+.pricing-pill-accent {
+  color: #cfe8ff;
+  border-color: rgba(77,171,247,.26);
+  background: rgba(77,171,247,.10);
+}
+.pricing-pill-accent .ico,
+.pricing-pill-mobile .ico { color: var(--info); }
+
+.pricing-slider-shell {
+  max-width: 1080px;
+  margin: 0 auto 20px;
+}
+.pricing-slider-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.pricing-slider-copy h2 {
+  font-size: clamp(20px, 3vw, 28px);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+.pricing-slider-copy p {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.9;
+}
+.pricing-slider-state {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+#pricingSlider.pricing-grid {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  padding: 12px 4px 18px;
+  margin: 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+#pricingSlider.pricing-grid::-webkit-scrollbar { display: none; }
+
+#pricingSlider .price-card {
+  flex: 0 0 84%;
+  min-width: 84%;
+  scroll-snap-align: center;
+  padding: 22px 18px 18px 26px;
+  text-align: right;
+  border-radius: 24px 18px 18px 24px;
+  overflow: hidden;
+  background:
+    linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.02) 58%),
+    radial-gradient(circle at top left, rgba(235,124,42,.14), transparent 34%);
+  border: 1px solid rgba(255,255,255,.09);
+  box-shadow: 0 16px 34px rgba(0,0,0,.28);
+}
+#pricingSlider .price-card::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  right: 0;
+  width: 14px;
+  border-radius: 0 18px 18px 0;
+  background: linear-gradient(180deg, var(--orange), var(--orange-deep));
+  box-shadow: inset 1px 0 0 rgba(255,255,255,.18);
+}
+#pricingSlider .price-card::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: 12px;
+  bottom: 18px;
+  width: 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.02));
+  opacity: .55;
+}
+#pricingSlider .price-card.featured {
+  border-color: rgba(235,124,42,.34);
+  background:
+    linear-gradient(160deg, rgba(235,124,42,.16), rgba(255,255,255,.03) 58%),
+    radial-gradient(circle at top left, rgba(235,124,42,.22), transparent 36%);
+  box-shadow: 0 18px 42px rgba(235,124,42,.16), 0 14px 28px rgba(0,0,0,.24);
+}
+#pricingSlider .price-card .badge {
+  top: 14px;
+  right: 18px;
+  transform: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  box-shadow: 0 6px 18px rgba(235,124,42,.35);
+}
+
+.plan-book-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-left: 22px;
+}
+.plan-book-index,
+.plan-book-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.plan-book-index {
+  color: var(--text-dim);
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.07);
+}
+.plan-book-index .ico { width: 13px; height: 13px; color: var(--orange); }
+.plan-book-chip {
+  color: var(--orange-2);
+  background: rgba(235,124,42,.10);
+  border: 1px solid rgba(235,124,42,.20);
+  white-space: nowrap;
+}
+.plan-book-sub {
+  color: var(--text-dim);
+  font-size: 12.5px;
+  line-height: 1.8;
+  margin-bottom: 14px;
+  padding-left: 18px;
+}
+
+#pricingSlider .price-card h3 {
+  font-size: 22px;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  padding-left: 20px;
+}
+#pricingSlider .price-card .price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+  margin: 8px 0 10px;
+  padding-left: 18px;
+}
+#pricingSlider .price-card .price small {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.plan-price-old {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+.plan-price-current {
+  font-size: clamp(26px, 6vw, 34px);
+  line-height: 1.1;
+  color: var(--orange);
+  font-weight: 900;
+}
+.plan-discount-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--success);
+  background: rgba(56,217,169,.10);
+  border: 1px solid rgba(56,217,169,.24);
+  margin-bottom: 14px;
+}
+.plan-discount-row .ico { width: 13px; height: 13px; }
+
+#pricingSlider .price-card ul {
+  margin: 0 0 16px;
+  gap: 10px;
+  padding-left: 16px;
+}
+#pricingSlider .price-card ul li {
+  align-items: flex-start;
+  font-size: 12.8px;
+  line-height: 1.8;
+}
+#pricingSlider .price-card ul li::before {
+  margin-top: 2px;
+}
+.plan-card-footer {
+  margin-top: auto;
+  padding-left: 18px;
+}
+.plan-feat-highlight {
+  color: #cfe8ff !important;
+  background: rgba(77,171,247,.10);
+  border: 1px solid rgba(77,171,247,.18);
+  border-radius: 12px;
+  padding: 9px 10px;
+}
+.plan-feat-highlight::before { display: none; }
+.plan-feat-highlight .ico { color: var(--info) !important; }
+.plan-schedule-note {
+  justify-content: flex-start;
+  text-align: right;
+  margin-top: 9px;
+  font-size: 11.5px;
+}
+
+.pricing-slider-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+.pricing-swipe-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.pricing-swipe-hint .ico {
+  width: 14px;
+  height: 14px;
+  color: var(--info);
+}
+.pricing-slider-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pricing-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255,255,255,.18);
+  cursor: pointer;
+  transition: .2s;
+}
+.pricing-dot.active {
+  width: 26px;
+  background: linear-gradient(90deg, var(--orange), var(--orange-2));
+}
+
+.schedule-mini-guide {
+  max-width: 980px;
+  margin: 0 auto 22px;
+  padding: 18px;
+}
+.schedule-mini-guide-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+}
+.schedule-mini-guide-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  color: var(--info);
+  background: rgba(77,171,247,.10);
+  border: 1px solid rgba(77,171,247,.24);
+}
+.schedule-mini-guide-icon .ico { width: 20px; height: 20px; }
+.schedule-mini-guide-head h3 {
+  font-size: 20px;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+.schedule-mini-guide-head p {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.9;
+}
+.schedule-mini-guide-example {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(56,217,169,.08);
+  border: 1px solid rgba(56,217,169,.24);
+}
+.schedule-mini-guide-example b {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--success);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.schedule-mini-guide-example b .ico { width: 14px; height: 14px; }
+.schedule-mini-guide-example span {
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.9;
+}
+.schedule-mini-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.schedule-mini-step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+}
+.schedule-mini-step b {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--orange), var(--orange-2));
+  color: #1a0e05;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.schedule-mini-step span {
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (min-width: 900px) {
+  #pricingSlider.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    overflow: visible;
+    scroll-snap-type: none;
+    padding: 14px 0 10px;
+  }
+  #pricingSlider .price-card {
+    min-width: 0;
+    flex: initial;
+    height: 100%;
+  }
+  .pricing-pill-mobile,
+  .pricing-swipe-hint { display: none; }
+}
+
+@media (max-width: 899px) {
+  .pricing-slider-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .pricing-slider-state {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .pricing-page-pills {
+    justify-content: stretch;
+  }
+  .pricing-pill {
+    width: 100%;
+    justify-content: center;
+  }
+  #pricingSlider .price-card {
+    flex-basis: 88%;
+    min-width: 88%;
+    padding: 20px 16px 16px 22px;
+  }
+  #pricingSlider .price-card h3 {
+    font-size: 20px;
+  }
+  .plan-book-meta {
+    padding-left: 16px;
+  }
+  .plan-book-meta,
+  .pricing-slider-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .pricing-slider-dots {
+    justify-content: center;
+  }
+  .schedule-mini-guide-head {
+    grid-template-columns: 1fr;
+  }
+  .schedule-mini-guide-example {
+    flex-direction: column;
+  }
+  .schedule-mini-steps {
+    grid-template-columns: 1fr;
+  }
 }

@@ -141,6 +141,50 @@ body.has-chat { overflow: hidden; height: 100dvh; }
 }
 .btn-upgrade .ico { width: 16px; height: 16px; }
 
+/* Schedule hint integrated inside subscription card */
+.sub-schedule-inline {
+  position: relative;
+  z-index: 1;
+  margin-top: 12px;
+  padding: 10px 11px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.sub-schedule-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(77,171,247,.10);
+  border: 1px solid rgba(77,171,247,.24);
+  color: var(--info);
+  font-size: 10.5px;
+  font-weight: 800;
+}
+.sub-schedule-badge .ico { width: 12px; height: 12px; }
+.sub-schedule-copy b {
+  display: block;
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.sub-schedule-copy small {
+  display: block;
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.75;
+  margin-top: 4px;
+}
+.sub-card-cta {
+  margin-top: 10px;
+}
+
 /* New chat button */
 .btn-new-chat {
   display: flex; align-items: center; justify-content: center;
@@ -309,6 +353,42 @@ body.has-chat { overflow: hidden; height: 100dvh; }
 .user-info { min-width: 0; }
 .user-name { font-size: 13px; font-weight: 600; color: var(--text); }
 .user-grade { font-size: 11px; color: var(--text-dim); }
+
+@media (max-width: 899px) {
+  .chat-sidebar {
+    gap: 10px;
+    padding: 12px 10px;
+  }
+  .sub-card {
+    padding: 12px;
+  }
+  .sub-card-head {
+    margin-bottom: 10px;
+  }
+  .sub-schedule-copy small {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .btn-new-chat {
+    order: 3;
+    padding: 11px 12px;
+    font-size: 13px;
+  }
+  .sidebar-section {
+    order: 4;
+  }
+  .sidebar-notices {
+    order: 5;
+  }
+  .sidebar-notices .dy-notice:nth-child(n+2) {
+    display: none;
+  }
+  .sidebar-footer {
+    order: 6;
+  }
+}
 
 /* ============================================================
    CHAT MAIN
