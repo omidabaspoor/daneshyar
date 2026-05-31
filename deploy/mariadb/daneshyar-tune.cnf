@@ -1,0 +1,38 @@
+# ============================================================
+#  دانش‌یار - تنظیمات MariaDB برای سرور ۱ گیگ رم
+#  مسیر نصب: /etc/mysql/mariadb.conf.d/99-daneshyar.cnf
+#  هدف: کم‌مصرف نگه‌داشتن دیتابیس تا رم برای PHP بماند.
+# ============================================================
+
+[mysqld]
+
+# --- بافر اصلی InnoDB (کوچک، چون رم کم است) ---
+innodb_buffer_pool_size = 128M
+innodb_log_file_size = 32M
+innodb_flush_log_at_trx_commit = 2   # کمی سریع‌تر، ریسک ناچیز
+innodb_flush_method = O_DIRECT
+
+# --- محدود کردن اتصالات همزمان (هماهنگ با ۲۵ worker PHP) ---
+max_connections = 60
+thread_cache_size = 8
+table_open_cache = 256
+
+# --- کاهش مصرف رم per-connection ---
+sort_buffer_size = 512K
+read_buffer_size = 256K
+read_rnd_buffer_size = 512K
+join_buffer_size = 512K
+tmp_table_size = 16M
+max_heap_table_size = 16M
+
+# --- غیرفعال‌سازی performance_schema برای صرفه‌جویی رم ---
+performance_schema = OFF
+
+# --- کاراکترست فارسی ---
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+# --- لاگ کوئری‌های کند ---
+slow_query_log = 1
+slow_query_log_file = /var/log/mysql/daneshyar-slow.log
+long_query_time = 2

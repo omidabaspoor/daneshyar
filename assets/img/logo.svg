@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff9a3d"/>
+      <stop offset="100%" stop-color="#eb7c2a"/>
+    </radialGradient>
+  </defs>
+  <!-- پس‌زمینه دایره‌ای نارنجی -->
+  <circle cx="250" cy="250" r="240" fill="url(#bgGrad)"/>
+
+  <!-- درخت دانش -->
+  <g fill="#1a0e05">
+    <!-- تنه اصلی -->
+    <path d="M240 420 Q235 380 240 340 Q245 310 250 290 Q255 310 260 340 Q265 380 260 420 Q255 435 250 435 Q245 435 240 420 Z"/>
+
+    <!-- ریشه‌ها -->
+    <path d="M190 425 Q220 425 240 420 L260 420 Q280 425 310 425 L310 430 Q280 432 250 432 Q220 432 190 430 Z"/>
+
+    <!-- کتاب در بالا -->
+    <path d="M215 130 L250 115 L285 130 L285 165 Q250 150 215 165 Z M250 130 L250 165" stroke="#1a0e05" stroke-width="3" fill="none"/>
+    <path d="M215 130 L250 115 L285 130 L285 170 L250 155 L215 170 Z" fill="#1a0e05"/>
+    <line x1="250" y1="125" x2="250" y2="165" stroke="#ff9a3d" stroke-width="3"/>
+
+    <!-- شاخه‌های پیچان با برگ -->
+    <!-- شاخه چپ بالا -->
+    <path d="M250 290 Q210 270 180 240 Q160 220 170 195 Q175 180 195 185 Q210 190 215 210" fill="none" stroke="#1a0e05" stroke-width="6" stroke-linecap="round"/>
+    <!-- برگ‌ها چپ -->
+    <path d="M155 200 Q140 195 135 215 Q140 230 155 225 Q165 220 165 210 Q165 200 155 200 Z"/>
+    <path d="M165 245 Q150 240 145 260 Q150 275 165 270 Q175 265 175 255 Q175 245 165 245 Z"/>
+
+    <!-- شاخه راست بالا -->
+    <path d="M250 290 Q290 270 320 240 Q340 220 330 195 Q325 180 305 185 Q290 190 285 210" fill="none" stroke="#1a0e05" stroke-width="6" stroke-linecap="round"/>
+    <!-- برگ‌ها راست -->
+    <path d="M345 200 Q360 195 365 215 Q360 230 345 225 Q335 220 335 210 Q335 200 345 200 Z"/>
+    <path d="M335 245 Q350 240 355 260 Q350 275 335 270 Q325 265 325 255 Q325 245 335 245 Z"/>
+
+    <!-- شاخه چپ پایین -->
+    <path d="M250 320 Q220 320 195 305 Q175 295 165 275" fill="none" stroke="#1a0e05" stroke-width="5" stroke-linecap="round"/>
+    <!-- شاخه راست پایین -->
+    <path d="M250 320 Q280 320 305 305 Q325 295 335 275" fill="none" stroke="#1a0e05" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- پیچک‌های تزئینی -->
+    <path d="M190 270 Q180 265 175 260 Q170 255 170 250" fill="none" stroke="#1a0e05" stroke-width="3" stroke-linecap="round"/>
+    <path d="M310 270 Q320 265 325 260 Q330 255 330 250" fill="none" stroke="#1a0e05" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- حروف الفبا روی شاخه‌ها (نماد یادگیری) -->
+    <text x="155" y="180" font-family="Arial" font-size="22" font-weight="900" fill="#1a0e05">A</text>
+    <text x="335" y="180" font-family="Arial" font-size="22" font-weight="900" fill="#1a0e05">ψ</text>
+    <text x="135" y="260" font-family="Arial" font-size="20" font-weight="900" fill="#1a0e05">π</text>
+  </g>
+</svg>
