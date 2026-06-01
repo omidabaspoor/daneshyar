@@ -1782,3 +1782,149 @@ body.has-chat { overflow: hidden; height: 100dvh; }
 .sub-count-warn b {
   color: #ef4444 !important;
 }
+
+/* ============================================================
+   ATTACH MODAL (دوربین / گالری / فایل‌ها)
+   ============================================================ */
+.attach-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 16px 24px;
+}
+
+.attach-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 14px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: var(--text);
+  font-family: inherit;
+  text-align: right;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+
+.attach-option:hover {
+  background: rgba(235,124,42,.10);
+  border-color: rgba(235,124,42,.35);
+  transform: translateY(-2px);
+}
+
+.attach-option:active {
+  transform: translateY(0);
+}
+
+.attach-o-highlight {
+  background: linear-gradient(135deg, rgba(235,124,42,.12), rgba(255,255,255,.03));
+  border-color: rgba(235,124,42,.25);
+}
+
+.attach-o-highlight:hover {
+  background: linear-gradient(135deg, rgba(235,124,42,.20), rgba(235,124,42,.05));
+  border-color: var(--border-orange);
+  box-shadow: 0 4px 16px rgba(235,124,42,.15);
+}
+
+.attach-o-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--orange-soft);
+  border: 1px solid rgba(235,124,42,.25);
+  color: var(--orange);
+  transition: .2s;
+}
+
+.attach-option:hover .attach-o-icon {
+  background: linear-gradient(135deg, var(--orange), var(--orange-2));
+  color: #1a0e05;
+  box-shadow: 0 4px 14px rgba(235,124,42,.35);
+  border-color: transparent;
+}
+
+.attach-o-icon .ico {
+  width: 22px;
+  height: 22px;
+}
+
+.attach-o-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.attach-o-text b {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  transition: color .2s;
+}
+
+.attach-option:hover .attach-o-text b {
+  color: var(--orange-2);
+}
+
+.attach-o-text small {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.attach-o-arrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: all .2s;
+}
+
+.attach-option:hover .attach-o-arrow {
+  color: var(--orange);
+  transform: translateX(-4px);
+}
+
+.attach-o-arrow .ico {
+  width: 18px;
+  height: 18px;
+}
+
+/* دسکتاپ: اندازه‌های کمی بزرگتر */
+@media (min-width: 720px) {
+  .attach-modal .modal-body {
+    padding: 22px 20px 28px;
+    gap: 12px;
+  }
+
+  .attach-option {
+    padding: 18px 16px;
+  }
+
+  .attach-o-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .attach-o-icon .ico {
+    width: 24px;
+    height: 24px;
+  }
+
+  .attach-o-text b {
+    font-size: 15px;
+  }
+
+  .attach-o-text small {
+    font-size: 12.5px;
+  }
+}

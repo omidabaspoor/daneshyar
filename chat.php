@@ -5,8 +5,8 @@ require_login();
 $user = current_user();
 $page = 'chat';
 $pageTitle = 'چت';
-$extraCss = ['chat.css?v=21'];
-$bodyClass = 'has-chat?v=21';
+$extraCss = ['chat.css?v=22'];
+$bodyClass = 'has-chat?v=22';
 $hideSiteChrome = true;
 $fullWidthMain = true;
 
@@ -334,7 +334,11 @@ include __DIR__ . '/includes/header.php';
         <button class="comp-btn comp-btn-attach" type="button" title="پیوست" id="btnAttach">
           <?= icon('attach') ?>
         </button>
-        <input type="file" id="fileInput" accept="image/*,image/heic,image/heif,application/pdf" hidden>
+
+        <!-- Hidden file inputs برای حالت‌های مختلف -->
+        <input type="file" id="fileInputCamera" accept="image/*,image/heic,image/heif" capture="environment" hidden>
+        <input type="file" id="fileInputGallery" accept="image/*,image/heic,image/heif" hidden>
+        <input type="file" id="fileInputFiles" accept="image/*,image/heic,image/heif,application/pdf" hidden>
 
         <textarea
           class="composer-input"
@@ -357,6 +361,44 @@ include __DIR__ . '/includes/header.php';
 
   <!-- Overlay -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
+</div>
+
+<!-- ====== Attach Modal (دوربین / گالری / فایل‌ها) ====== -->
+<div class="modal-overlay" id="attachModal">
+  <div class="modal-box attach-modal">
+    <div class="modal-head">
+      <h3><?= icon('attach') ?> افزودن پیوست</h3>
+      <button class="icon-btn-mini" data-close-modal><?= icon('close') ?></button>
+    </div>
+    <div class="modal-body">
+      <button class="attach-option" data-action="camera">
+        <span class="attach-o-icon"><?= icon('camera') ?></span>
+        <span class="attach-o-text">
+          <b>دوربین</b>
+          <small>عکس‌برداری مستقیم با دوربین</small>
+        </span>
+        <span class="attach-o-arrow"><?= icon('arrow-left') ?></span>
+      </button>
+
+      <button class="attach-option attach-o-highlight" data-action="gallery">
+        <span class="attach-o-icon"><?= icon('image') ?></span>
+        <span class="attach-o-text">
+          <b>گالری</b>
+          <small>انتخاب از گالری تصاویر · جدیدترین‌ها اول</small>
+        </span>
+        <span class="attach-o-arrow"><?= icon('arrow-left') ?></span>
+      </button>
+
+      <button class="attach-option" data-action="files">
+        <span class="attach-o-icon"><?= icon('upload') ?></span>
+        <span class="attach-o-text">
+          <b>فایل‌ها</b>
+          <small>انتخاب تصویر یا PDF از حافظه</small>
+        </span>
+        <span class="attach-o-arrow"><?= icon('arrow-left') ?></span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ====== Book Picker Modal ====== -->

@@ -10,7 +10,9 @@
   const $  = (id) => document.getElementById(id);
   const input          = $('messageInput');
   const sendBtn        = $('sendBtn');
-  const fileInput      = $('fileInput');
+  const fileInputCamera  = $('fileInputCamera');
+  const fileInputGallery = $('fileInputGallery');
+  const fileInputFiles   = $('fileInputFiles');
   const btnAttach      = $('btnAttach');
   const msgsBox        = $('chatMessages');
   const bookSelect     = $('bookSelect');
@@ -37,6 +39,7 @@
   const renameModal = $('renameModal');
   const renameInput = $('renameInput');
   const renameSave  = $('renameSave');
+  const attachModal = $('attachModal');
 
   let pendingFile = null;
   let isSending   = false;
@@ -239,9 +242,42 @@
   });
   sendBtn.addEventListener('click', sendMessage);
 
-  /* File upload */
-  btnAttach.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+  /* File upload - Attach Modal (دوربین / گالری / فایل‌ها) */
+  // دکمه سنجاق: مودال انتخاب رو باز کن
+  btnAttach.addEventListener('click', () => {
+    if (attachModal) attachModal.classList.add('show');
+  });
+
+  // هندل کردن انتخاب‌های مودال
+  document.querySelector('#attachModal .modal-body')?.addEventListener('click', (e) => {
+    const option = e.target.closest('.attach-option');
+    if (!option) return;
+    const action = option.dataset.action;
+    if (!action) return;
+
+    // بستن مودال
+    attachModal?.classList.remove('show');
+
+    // انتخاب فایل اینپوت مناسب
+    if (action === 'camera') {
+      fileInputCamera?.click();
+    } else if (action === 'gallery') {
+      fileInputGallery?.click();
+    } else if (action === 'files') {
+      fileInputFiles?.click();
+    }
+  });
+
+  // هندل کردن change برای هر سه تا فایل اینپوت
+  function handleFileInputChange(inputEl) {
+    if (!inputEl) return;
+    if (inputEl.files?.[0]) handleFile(inputEl.files[0]);
+    inputEl.value = ''; // ریست برای انتخاب مجدد
+  }
+
+  fileInputCamera?.addEventListener('change', () => handleFileInputChange(fileInputCamera));
+  fileInputGallery?.addEventListener('change', () => handleFileInputChange(fileInputGallery));
+  fileInputFiles?.addEventListener('change', () => handleFileInputChange(fileInputFiles));
 
   // فشرده‌سازی عکس در مرورگر قبل از آپلود (سرعت بالاتر)
   function compressImage(file, maxDim, quality) {
@@ -282,11 +318,11 @@
     const isPdf     = f.type === 'application/pdf' || nameLower.endsWith('.pdf');
     if (!isImage && !isPdf) {
       alert('فقط عکس (JPG/PNG/WEBP/GIF/HEIC) یا PDF قابل ارسال است.');
-      fileInput.value = ''; return;
+      resetAllFileInputs(); return;
     }
     if (f.size > 15 * 1024 * 1024) {
       alert('حجم فایل نباید بیش از ۱۵ مگابایت باشد.');
-      fileInput.value = ''; return;
+      resetAllFileInputs(); return;
     }
     if (isHeic) {
       showToast('در حال تبدیل عکس HEIC… لطفاً کمی صبر کن');
@@ -370,7 +406,7 @@
         </div>
       </div>`;
     attachBox.querySelector('.att-remove').onclick = () => {
-      pendingFile = null; fileInput.value = ''; renderAttachment(); updateSendBtn();
+      pendingFile = null; resetAllFileInputs(); renderAttachment(); updateSendBtn();
     };
   }
 
@@ -579,10 +615,16 @@
       if (typing && typing.parentNode) typing.remove();
       appendMessage('assistant', '⚠ خطای غیرمنتظره: ' + err.message);
     } finally {
-      pendingFile = null; fileInput.value = ''; renderAttachment();
+      pendingFile = null; resetAllFileInputs(); renderAttachment();
       isSending = false; composerRow?.classList.remove('sending');
       updateSendBtn(); input.focus();
     }
+  }
+
+  function resetAllFileInputs() {
+    if (fileInputCamera) fileInputCamera.value = '';
+    if (fileInputGallery) fileInputGallery.value = '';
+    if (fileInputFiles) fileInputFiles.value = '';
   }
 
   function openLightbox(src) {
