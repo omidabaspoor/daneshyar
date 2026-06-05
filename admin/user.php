@@ -22,8 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
     $grade  = (int)($_POST['grade'] ?? $viewUser['grade']);
     $major  = normalize_major($_POST['major'] ?? ($viewUser['major'] ?? 'math'));
 
-    if ($first === '' || $last === '' || $grade < 7 || $grade > 12) {
-        $msg = 'اطلاعات وارد شده نامعتبر است.';
+    if (!is_valid_person_name($first) || !is_valid_person_name($last) || !is_valid_school_name($school) || $grade < 7 || $grade > 12) {
+        $msg = 'اطلاعات وارد شده نامعتبر است؛ نام واقعی و نام مدرسه الزامی است.';
     } else {
         db()->prepare("UPDATE users SET first_name=?, last_name=?, school=?, grade=?, major=? WHERE id=?")
             ->execute([$first, $last, $school, $grade, $major, $id]);
@@ -35,7 +35,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if ($_POST['action'] === 'save_discount') {
+    if ($_POST['action'] === 'reset_password') {
+        $newPass = (string)($_POST['new_password'] ?? '');
+        if (mb_strlen($newPass, 'UTF-8') < 6) {
+            $msg = 'رمز جدید باید حداقل ۶ کاراکتر باشد.';
+        } elseif (($viewUser['role'] ?? 'user') === 'admin') {
+            $msg = 'تغییر رمز حساب ادمین از این بخش مجاز نیست.';
+        } else {
+            db()->prepare("UPDATE users SET password=? WHERE id=? AND role!='admin'")
+                ->execute([password_hash($newPass, PASSWORD_BCRYPT), $id]);
+            try { db()->prepare("DELETE FROM user_sessions WHERE user_id=?")->execute([$id]); } catch (Throwable $e) {}
+            $msg = 'رمز عبور کاربر تغییر کرد. رمز فعلی قابل مشاهده نیست؛ فقط رمز جدیدی که تعیین کردی معتبر است.';
+            $stmt->execute([$id]);
+            $viewUser = $stmt->fetch();
+        }
+    } elseif ($_POST['action'] === 'save_discount') {
         $plan_code = trim($_POST['plan_code'] ?? '');
         $percent = (int)($_POST['discount_percent'] ?? 0);
         if ($plan_code !== '' && $percent >= 0 && $percent <= 100) {
@@ -106,7 +120,7 @@ $messages = $messagesStmt->fetchAll();
         <div class="form-group"><label class="form-label">پایه</label><select class="select" name="grade"><?php for($g=7;$g<=12;$g++): ?><option value="<?= $g ?>" <?= (int)$viewUser['grade']===$g?'selected':'' ?>>پایه <?= num_fa($g) ?></option><?php endfor; ?></select></div>
         <div class="form-group"><label class="form-label">رشته/شاخه</label><select class="select" name="major"><?php foreach(major_options() as $code=>$label): ?><option value="<?= e($code) ?>" <?= ($viewUser['major'] ?? 'math')===$code?'selected':'' ?>><?= e($label) ?></option><?php endforeach; ?></select></div>
       </div>
-      <div class="form-group"><label class="form-label">مدرسه</label><input class="input" name="school" value="<?= e($viewUser['school']) ?>"></div>
+      <div class="form-group"><label class="form-label">مدرسه</label><input class="input" name="school" value="<?= e($viewUser['school']) ?>" required minlength="2"></div>
       <button class="btn btn-primary">ذخیره اطلاعات</button>
     </form>
   </div>
@@ -125,6 +139,25 @@ $messages = $messagesStmt->fetchAll();
       <tr><th>عضویت</th><td><?= e($viewUser['created_at']) ?></td></tr>
     </table>
   </div>
+</div>
+
+<div class="glass" style="padding:18px; margin-top:16px">
+  <h3 style="color:var(--orange); margin-bottom:12px">مدیریت رمز عبور</h3>
+  <div class="alert alert-info" style="margin-bottom:12px">
+    رمز فعلی کاربران به‌صورت هش امن ذخیره می‌شود و قابل مشاهده نیست. از این بخش می‌توانی رمز جدید تعیین کنی.
+  </div>
+  <?php if (($viewUser['role'] ?? 'user') !== 'admin'): ?>
+  <form method="post" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+    <input type="hidden" name="action" value="reset_password">
+    <div class="form-group" style="flex:1; min-width:220px">
+      <label class="form-label">رمز جدید کاربر</label>
+      <input class="input" type="text" name="new_password" minlength="6" required autocomplete="off" placeholder="حداقل ۶ کاراکتر">
+    </div>
+    <button class="btn btn-primary" onclick="return confirm('رمز این کاربر تغییر کند؟ نشست‌های قبلی او هم خارج می‌شود.')"><?= icon('lock') ?> تغییر رمز</button>
+  </form>
+  <?php else: ?>
+    <div class="alert alert-error">برای امنیت، رمز حساب ادمین از این صفحه قابل تغییر نیست.</div>
+  <?php endif; ?>
 </div>
 
 
