@@ -29,6 +29,12 @@ $user = current_user();
 if (!$user) {
     sse_error_and_exit('برای استفاده از چت ابتدا وارد حساب کاربری خود شو.', 401);
 }
+if (is_banned($user)) {
+    sse_error_and_exit('حساب شما مسدود شده است.', 403);
+}
+if (!is_profile_complete($user)) {
+    sse_error_and_exit('برای ادامه استفاده، لطفاً از بخش پروفایل نام واقعی و نام مدرسه را تکمیل کن.', 403);
+}
 
 if (!csrf_check($_POST['csrf'] ?? '')) {
     sse_error_and_exit('توکن امنیتی نامعتبر است. صفحه را رفرش کن و دوباره تلاش کن.', 403);

@@ -4,6 +4,23 @@ require_once __DIR__ . '/db.php';
 /* ============================================================
  *  مدیریت Session طولانی‌مدت (Remember Me - 30 روز)
  * ============================================================ */
+function request_is_secure() {
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') return true;
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https') return true;
+    if (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower((string)$_SERVER['HTTP_X_FORWARDED_SSL']) === 'on') return true;
+    return false;
+}
+
+function cookie_delete($name) {
+    setcookie($name, '', [
+        'expires'  => time() - 3600,
+        'path'     => '/',
+        'secure'   => request_is_secure(),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
+
 function start_session_persistent() {
     if (session_status() !== PHP_SESSION_NONE) return;
 
@@ -12,11 +29,12 @@ function start_session_persistent() {
     session_set_cookie_params([
         'lifetime' => $lifetime,
         'path'     => '/',
-        'secure'   => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+        'secure'   => request_is_secure(),
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
     ini_set('session.gc_maxlifetime', $lifetime);
+    ini_set('session.use_strict_mode', 1);
     session_start();
 
     // بررسی اعتبار session با remember_token
@@ -30,7 +48,7 @@ function start_session_persistent() {
                 $_SESSION['user_id'] = $row['user_id'];
                 db()->prepare("UPDATE user_sessions SET last_active=NOW() WHERE id=?")->execute([$token]);
             } else {
-                setcookie('remember_token', '', time() - 3600, '/', '', false, true);
+                cookie_delete('remember_token');
             }
         } catch (Throwable $e) {}
     }
@@ -71,6 +89,75 @@ function csrf_check($token) {
 
 function is_valid_mobile($m) {
     return (bool)preg_match('/^09\d{9}$/', $m);
+}
+
+function normalize_human_text($s) {
+    $s = trim((string)$s);
+    $s = preg_replace('/\s+/u', ' ', $s);
+    return $s;
+}
+
+function is_valid_person_name($name) {
+    $name = normalize_human_text($name);
+    if (mb_strlen($name, 'UTF-8') < 2 || mb_strlen($name, 'UTF-8') > 40) return false;
+    // فقط حروف فارسی/عربی، فاصله، نیم‌فاصله و خط تیره؛ عدد و نمادهای عجیب ممنوع
+    if (!preg_match('/^[\p{Arabic}\x{200c}\s\-]+$/u', $name)) return false;
+    $lettersOnly = preg_replace('/[\s\x{200c}\-]/u', '', $name);
+    if (mb_strlen($lettersOnly, 'UTF-8') < 2) return false;
+    // جلوگیری از نام‌های تک‌حرفی/تکراری مثل «م م»، «ن ن»، «ااا»
+    $chars = preg_split('//u', $lettersOnly, -1, PREG_SPLIT_NO_EMPTY);
+    if ($chars && count(array_unique($chars)) === 1) return false;
+    $bad = ['تست','نام','کاربر','مهمان','ناشناس','فیک','الکی'];
+    return !in_array(mb_strtolower($name, 'UTF-8'), $bad, true);
+}
+
+function is_valid_school_name($school) {
+    $school = normalize_human_text($school);
+    if (mb_strlen($school, 'UTF-8') < 2 || mb_strlen($school, 'UTF-8') > 120) return false;
+    if (!preg_match('/[\p{Arabic}A-Za-z]/u', $school)) return false;
+    $plain = preg_replace('/[\s\x{200c}\-_.]/u', '', $school);
+    $chars = preg_split('//u', $plain, -1, PREG_SPLIT_NO_EMPTY);
+    if ($chars && count($chars) >= 2 && count(array_unique($chars)) === 1) return false;
+    return true;
+}
+
+function is_profile_complete($user) {
+    if (!$user) return false;
+    return is_valid_person_name($user['first_name'] ?? '')
+        && is_valid_person_name($user['last_name'] ?? '')
+        && is_valid_school_name($user['school'] ?? '');
+}
+
+function verify_user_password($password, $storedHash, $userId = null) {
+    $password   = (string)$password;
+    $storedHash = (string)$storedHash;
+    if ($storedHash === '') return false;
+
+    if (password_verify($password, $storedHash)) {
+        if ($userId && password_needs_rehash($storedHash, PASSWORD_BCRYPT)) {
+            try {
+                db()->prepare("UPDATE users SET password=? WHERE id=?")
+                    ->execute([password_hash($password, PASSWORD_BCRYPT), (int)$userId]);
+            } catch (Throwable $e) {}
+        }
+        return true;
+    }
+
+    // سازگاری با کاربرانی که از نسخه‌های قدیمی/انتقالی رمز ناامن دارند.
+    // اگر درست بود، همان لحظه به هش امن تبدیل می‌شود.
+    $isKnownHash = (password_get_info($storedHash)['algo'] ?? 0) !== 0;
+    $legacyOk = false;
+    if (!$isKnownHash && hash_equals($storedHash, $password)) $legacyOk = true;
+    if (!$legacyOk && preg_match('/^[a-f0-9]{32}$/i', $storedHash) && hash_equals(strtolower($storedHash), md5($password))) $legacyOk = true;
+    if (!$legacyOk && preg_match('/^[a-f0-9]{40}$/i', $storedHash) && hash_equals(strtolower($storedHash), sha1($password))) $legacyOk = true;
+
+    if ($legacyOk && $userId) {
+        try {
+            db()->prepare("UPDATE users SET password=? WHERE id=?")
+                ->execute([password_hash($password, PASSWORD_BCRYPT), (int)$userId]);
+        } catch (Throwable $e) {}
+    }
+    return $legacyOk;
 }
 
 function fa_to_en_digits($s) {
@@ -389,18 +476,35 @@ function require_login() {
         logout_user();
         redirect(BASE_URL . '/login.php?banned=1');
     }
+    // کاربران قدیمی با نام/مدرسه ناقص باید قبل از استفاده، پروفایل را کامل کنند.
+    $script = basename($_SERVER['SCRIPT_NAME'] ?? '');
+    if (!is_profile_complete($u) && !in_array($script, ['profile.php', 'logout.php'], true)) {
+        redirect(BASE_URL . '/profile.php?complete=1');
+    }
 }
 
-function login_user($user_id, $remember = false) {
-    $_SESSION['user_id'] = $user_id;
+function issue_remember_token($user_id) {
+    $token = bin2hex(random_bytes(32));
+    try {
+        db()->prepare("INSERT INTO user_sessions (id, user_id, ip, user_agent) VALUES (?,?,?,?)")
+            ->execute([$token, (int)$user_id, $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '']);
+    } catch (Throwable $e) {}
+    setcookie('remember_token', $token, [
+        'expires'  => time() + 30 * 24 * 3600,
+        'path'     => '/',
+        'secure'   => request_is_secure(),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
+
+function login_user($user_id, $remember = true) {
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        @session_regenerate_id(true);
+    }
+    $_SESSION['user_id'] = (int)$user_id;
     if ($remember) {
-        $token = bin2hex(random_bytes(32));
-        try {
-            db()->prepare("INSERT INTO user_sessions (id, user_id, ip, user_agent) VALUES (?,?,?,?)")
-                ->execute([$token, $user_id, $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '']);
-        } catch (Throwable $e) {}
-        $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
-        setcookie('remember_token', $token, time() + 30 * 24 * 3600, '/', '', $secure, true);
+        issue_remember_token((int)$user_id);
     }
 }
 
@@ -411,7 +515,7 @@ function logout_user() {
         try {
             db()->prepare("DELETE FROM user_sessions WHERE id=?")->execute([$token]);
         } catch (Throwable $e) {}
-        setcookie('remember_token', '', time() - 3600, '/', '', false, true);
+        cookie_delete('remember_token');
     }
     unset($_SESSION['user_id']);
 }

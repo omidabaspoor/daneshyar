@@ -1928,3 +1928,153 @@ body.has-chat { overflow: hidden; height: 100dvh; }
     font-size: 12.5px;
   }
 }
+
+/* ============================================================
+   Formula readability upgrade - larger, cleaner, mobile friendly
+   ============================================================ */
+.message.assistant .bubble {
+  font-size: 15.2px;
+  line-height: 2;
+}
+.message.assistant .bubble p,
+.message.assistant .bubble li {
+  margin-top: 7px;
+  margin-bottom: 7px;
+}
+.message.assistant .bubble strong {
+  font-weight: 900;
+}
+
+/* Inline math: no tiny scrollbars; clearer chip */
+.message .bubble .katex {
+  font-size: 1.16em;
+  padding: 3px 8px;
+  border-radius: 8px;
+  overflow: visible !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  max-width: none;
+  line-height: 1.55;
+  color: #ffe2bd;
+  background: linear-gradient(180deg, rgba(235,124,42,.16), rgba(235,124,42,.07));
+  border-color: rgba(235,124,42,.32);
+}
+.message .bubble .katex::-webkit-scrollbar { display: none; }
+
+/* Display formulas: make them look like answer-sheet equations */
+.message .bubble .kd-wrap,
+.message .bubble .katex-display:not(.kd-wrap .katex-display) {
+  margin: 16px 0;
+  padding: 18px 16px 14px;
+  background: linear-gradient(135deg, rgba(235,124,42,.15), rgba(18,18,28,.72));
+  border: 1px solid rgba(235,124,42,.42);
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.message .bubble .kd-wrap .katex-display .katex,
+.message .bubble .katex-display:not(.kd-wrap .katex-display) > .katex {
+  font-size: 1.42em;
+  color: #fff;
+}
+.message .bubble .kd-wrap::before {
+  content: 'رابطه';
+  color: rgba(255,184,107,.9);
+  font-size: 10px;
+}
+
+/* Better ordered solution readability */
+.message.assistant .bubble ol {
+  counter-reset: item;
+  list-style: none;
+  padding-right: 0;
+  margin: 10px 0;
+}
+.message.assistant .bubble ol > li {
+  position: relative;
+  padding: 9px 38px 9px 10px;
+  margin: 8px 0;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+}
+.message.assistant .bubble ol > li::before {
+  counter-increment: item;
+  content: counter(item);
+  position: absolute;
+  right: 10px;
+  top: 9px;
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--orange), var(--orange-2));
+  color: #1a0e05;
+  font-weight: 900;
+  font-size: 11px;
+}
+
+@media (max-width: 560px) {
+  .message.assistant .bubble {
+    font-size: 14.4px;
+    line-height: 1.95;
+    padding: 12px 12px;
+  }
+  .message .bubble .katex {
+    font-size: 1.08em;
+    padding: 2px 6px;
+  }
+  .message .bubble .kd-wrap,
+  .message .bubble .katex-display:not(.kd-wrap .katex-display) {
+    padding: 18px 10px 12px;
+    border-radius: 13px;
+  }
+  .message .bubble .kd-wrap .katex-display .katex,
+  .message .bubble .katex-display:not(.kd-wrap .katex-display) > .katex {
+    font-size: 1.18em;
+  }
+}
+
+/* Formula size correction v26: balanced, not huge */
+.message.assistant .bubble {
+  font-size: 14.7px;
+  line-height: 1.9;
+}
+.message .bubble .katex {
+  font-size: 1.04em !important;
+  padding: 2px 6px !important;
+  border-radius: 7px !important;
+  line-height: 1.45 !important;
+}
+.message .bubble .kd-wrap,
+.message .bubble .katex-display:not(.kd-wrap .katex-display) {
+  margin: 12px 0 !important;
+  padding: 13px 12px 10px !important;
+  border-radius: 13px !important;
+}
+.message .bubble .kd-wrap .katex-display .katex,
+.message .bubble .katex-display:not(.kd-wrap .katex-display) > .katex {
+  font-size: 1.13em !important;
+}
+.message.assistant .bubble ol > li {
+  padding: 7px 36px 7px 9px;
+  margin: 6px 0;
+}
+@media (max-width: 560px) {
+  .message.assistant .bubble {
+    font-size: 14px;
+    line-height: 1.85;
+  }
+  .message .bubble .katex {
+    font-size: 1em !important;
+    padding: 1px 5px !important;
+  }
+  .message .bubble .kd-wrap,
+  .message .bubble .katex-display:not(.kd-wrap .katex-display) {
+    padding: 12px 8px 9px !important;
+  }
+  .message .bubble .kd-wrap .katex-display .katex,
+  .message .bubble .katex-display:not(.kd-wrap .katex-display) > .katex {
+    font-size: 1.04em !important;
+  }
+}

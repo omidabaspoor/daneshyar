@@ -20,6 +20,8 @@ header('Content-Type: application/json; charset=utf-8');
 
 $user = current_user();
 if (!$user) json_response(['ok'=>false,'error'=>'ابتدا وارد شو.'], 401);
+if (is_banned($user)) json_response(['ok'=>false,'error'=>'حساب شما مسدود شده است.'], 403);
+if (!is_profile_complete($user)) json_response(['ok'=>false,'error'=>'برای ادامه استفاده، لطفاً از بخش پروفایل نام واقعی و نام مدرسه را تکمیل کن.'], 403);
 
 if (!csrf_check($_POST['csrf'] ?? '')) {
     json_response(['ok'=>false,'error'=>'توکن امنیتی نامعتبر است.'], 403);

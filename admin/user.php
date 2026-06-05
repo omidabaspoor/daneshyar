@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
     $major  = normalize_major($_POST['major'] ?? ($viewUser['major'] ?? 'math'));
 
     if (!is_valid_person_name($first) || !is_valid_person_name($last) || !is_valid_school_name($school) || $grade < 7 || $grade > 12) {
-        $msg = 'اطلاعات وارد شده نامعتبر است؛ نام واقعی و نام مدرسه الزامی است.';
+        $msg = 'اطلاعات وارد شده نامعتبر است.';
     } else {
         db()->prepare("UPDATE users SET first_name=?, last_name=?, school=?, grade=?, major=? WHERE id=?")
             ->execute([$first, $last, $school, $grade, $major, $id]);
@@ -33,19 +33,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
     }
 }
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'reset_password') {
         $newPass = (string)($_POST['new_password'] ?? '');
         if (mb_strlen($newPass, 'UTF-8') < 6) {
             $msg = 'رمز جدید باید حداقل ۶ کاراکتر باشد.';
         } elseif (($viewUser['role'] ?? 'user') === 'admin') {
-            $msg = 'تغییر رمز حساب ادمین از این بخش مجاز نیست.';
+            $msg = 'تغییر رمز حساب ادمین مجاز نیست.';
         } else {
             db()->prepare("UPDATE users SET password=? WHERE id=? AND role!='admin'")
                 ->execute([password_hash($newPass, PASSWORD_BCRYPT), $id]);
             try { db()->prepare("DELETE FROM user_sessions WHERE user_id=?")->execute([$id]); } catch (Throwable $e) {}
-            $msg = 'رمز عبور کاربر تغییر کرد. رمز فعلی قابل مشاهده نیست؛ فقط رمز جدیدی که تعیین کردی معتبر است.';
+            $msg = 'رمز عبور کاربر تغییر کرد.';
             $stmt->execute([$id]);
             $viewUser = $stmt->fetch();
         }
@@ -53,13 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $plan_code = trim($_POST['plan_code'] ?? '');
         $percent = (int)($_POST['discount_percent'] ?? 0);
         if ($plan_code !== '' && $percent >= 0 && $percent <= 100) {
-            db()->prepare("INSERT INTO user_discounts (user_id, plan_code, discount_percent) 
-                           VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE discount_percent = ?")
+            db()->prepare("INSERT INTO user_discounts (user_id, plan_code, discount_percent) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE discount_percent = ?")
                ->execute([$id, $plan_code, $percent, $percent]);
             $msg = 'تخفیف با موفقیت ثبت شد.';
-        } else {
-            $msg = 'مقادیر تخفیف نامعتبر است.';
-        }
+        } else { $msg = 'مقادیر تخفیف نامعتبر است.'; }
     } elseif ($_POST['action'] === 'delete_discount') {
         $discount_id = (int)($_POST['discount_id'] ?? 0);
         if ($discount_id > 0) {
@@ -70,12 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 $sub = subscription_status($viewUser);
-
-$stats = [
-    'chats' => 0,
-    'messages' => 0,
-    'paid' => 0,
-];
+$stats = ['chats' => 0, 'messages' => 0, 'paid' => 0];
 $s = db()->prepare("SELECT COUNT(*) FROM chats WHERE user_id=?"); $s->execute([$id]); $stats['chats'] = (int)$s->fetchColumn();
 $s = db()->prepare("SELECT COUNT(*) FROM chat_history WHERE user_id=?"); $s->execute([$id]); $stats['messages'] = (int)$s->fetchColumn();
 $s = db()->prepare("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE user_id=? AND status='paid'"); $s->execute([$id]); $stats['paid'] = (int)$s->fetchColumn();
@@ -92,80 +83,109 @@ $messagesStmt = db()->prepare("SELECT h.*, c.title AS chat_title, b.title AS boo
 $messagesStmt->execute([$id]);
 $messages = $messagesStmt->fetchAll();
 ?>
-<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:14px">
-  <h2 style="display:flex; align-items:center; gap:10px"><?= icon('user') ?> جزئیات کاربر #<?= num_fa($viewUser['id']) ?></h2>
-  <a class="btn btn-ghost btn-sm" href="<?= BASE_URL ?>/admin/users.php">بازگشت به کاربران</a>
+
+<div class="admin-page-header">
+  <h2><?= icon('user') ?> جزئیات کاربر #<?= num_fa($viewUser['id']) ?></h2>
+  <a class="btn btn-ghost btn-sm" href="<?= BASE_URL ?>/admin/users.php">← بازگشت به کاربران</a>
 </div>
 
-<?php if ($msg): ?><div class="alert alert-success"><?= icon('check') ?> <?= e($msg) ?></div><?php endif; ?>
+<?php if ($msg): ?>
+  <div class="alert alert-success"><?= icon('check') ?> <?= e($msg) ?></div>
+<?php endif; ?>
 
+<!-- ═══ آمار کاربر ═══ -->
 <div class="stat-grid">
-  <div class="stat-card glass"><div class="s-icon"><?= icon('chat') ?></div><div><div class="l">چت‌ها</div><div class="v"><?= num_fa($stats['chats']) ?></div></div></div>
-  <div class="stat-card glass"><div class="s-icon"><?= icon('graph') ?></div><div><div class="l">کل پیام‌ها</div><div class="v"><?= num_fa($stats['messages']) ?></div></div></div>
-  <div class="stat-card glass"><div class="s-icon"><?= icon('wallet') ?></div><div><div class="l">پرداختی</div><div class="v"><?= format_price($stats['paid']) ?></div></div></div>
-  <div class="stat-card glass"><div class="s-icon"><?= icon('crown') ?></div><div><div class="l">اشتراک</div><div class="v" style="font-size:16px"><?= $sub['active'] ? 'فعال' : 'غیرفعال' ?></div></div></div>
+  <div class="stat-card glass">
+    <div class="s-icon"><?= icon('chat') ?></div>
+    <div><div class="l">چت‌ها</div><div class="v"><?= num_fa($stats['chats']) ?></div></div>
+  </div>
+  <div class="stat-card glass">
+    <div class="s-icon"><?= icon('graph') ?></div>
+    <div><div class="l">کل پیام‌ها</div><div class="v"><?= num_fa($stats['messages']) ?></div></div>
+  </div>
+  <div class="stat-card glass">
+    <div class="s-icon"><?= icon('wallet') ?></div>
+    <div><div class="l">پرداختی</div><div class="v"><?= format_price($stats['paid']) ?></div></div>
+  </div>
+  <div class="stat-card glass">
+    <div class="s-icon" style="<?= $sub['active'] ? 'background:rgba(56,217,169,.12);border-color:rgba(56,217,169,.2);color:var(--success)' : 'background:rgba(255,84,112,.12);border-color:rgba(255,84,112,.2);color:var(--danger)' ?>">
+      <?= icon('crown') ?>
+    </div>
+    <div><div class="l">اشتراک</div><div class="v <?= $sub['active'] ? 'text-success' : 'text-danger' ?>"><?= $sub['active'] ? 'فعال' : 'غیرفعال' ?></div></div>
+  </div>
 </div>
 
-<div class="user-detail-grid">
-  <div class="glass" style="padding:18px">
-    <h3 style="color:var(--orange); margin-bottom:12px">اطلاعات شخصی</h3>
-    <form method="post">
-      <input type="hidden" name="action" value="save_profile">
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-        <div class="form-group"><label class="form-label">نام</label><input class="input" name="first_name" value="<?= e($viewUser['first_name']) ?>" required></div>
-        <div class="form-group"><label class="form-label">نام خانوادگی</label><input class="input" name="last_name" value="<?= e($viewUser['last_name']) ?>" required></div>
+<!-- ═══ اطلاعات شخصی + اشتراک ═══ -->
+<div class="dash-grid">
+  <div class="admin-card glass">
+    <div class="admin-card-header"><h3><?= icon('user') ?> اطلاعات شخصی</h3></div>
+    <div class="admin-card-body">
+      <form method="post">
+        <input type="hidden" name="action" value="save_profile">
+        <div class="admin-form-grid">
+          <div class="form-group"><label class="form-label">نام</label><input class="input" name="first_name" value="<?= e($viewUser['first_name']) ?>" required></div>
+          <div class="form-group"><label class="form-label">نام خانوادگی</label><input class="input" name="last_name" value="<?= e($viewUser['last_name']) ?>" required></div>
+          <div class="form-group full-width"><label class="form-label">موبایل/شناسه</label><input class="input" value="<?= e($viewUser['mobile']) ?>" dir="ltr" disabled></div>
+          <div class="form-group"><label class="form-label">پایه</label>
+            <select class="select" name="grade"><?php for($g=7;$g<=12;$g++): ?><option value="<?= $g ?>" <?= (int)$viewUser['grade']===$g?'selected':'' ?>>پایه <?= num_fa($g) ?></option><?php endfor; ?></select>
+          </div>
+          <div class="form-group"><label class="form-label">رشته/شاخه</label>
+            <select class="select" name="major"><?php foreach(major_options() as $code=>$label): ?><option value="<?= e($code) ?>" <?= ($viewUser['major'] ?? 'math')===$code?'selected':'' ?>><?= e($label) ?></option><?php endforeach; ?></select>
+          </div>
+          <div class="form-group full-width"><label class="form-label">مدرسه</label><input class="input" name="school" value="<?= e($viewUser['school']) ?>" required minlength="2"></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:8px">ذخیره اطلاعات</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-card glass">
+    <div class="admin-card-header"><h3><?= icon('crown') ?> اشتراک و مصرف</h3></div>
+    <div class="admin-card-body" style="padding:0">
+      <div class="admin-table-wrap">
+        <table class="admin-table detail-list">
+          <tr><th>نقش</th><td><?= e($viewUser['role']) ?></td></tr>
+          <tr><th>وضعیت</th><td><?= $sub['active'] ? '<span class="status-badge status-active">فعال</span>' : '<span class="status-badge status-banned">'.e($sub['reason']).'</span>' ?></td></tr>
+          <tr><th>نوع پلن</th><td><?= e($viewUser['subscription_type']) ?></td></tr>
+          <tr><th>شروع</th><td><?= e($viewUser['subscription_start'] ?: '—') ?></td></tr>
+          <tr><th>پایان</th><td><?= e($viewUser['subscription_end'] ?: '—') ?></td></tr>
+          <tr><th>پیام امروز</th><td><?= num_fa($viewUser['messages_used_today']) ?></td></tr>
+          <tr><th>رایگان امروز</th><td><?= num_fa($viewUser['free_used_today']) ?></td></tr>
+          <tr><th>کل پیام</th><td><?= num_fa($viewUser['messages_used_total']) ?></td></tr>
+          <tr><th>عضویت</th><td><?= e($viewUser['created_at']) ?></td></tr>
+        </table>
       </div>
-      <div class="form-group"><label class="form-label">موبایل/شناسه</label><input class="input" value="<?= e($viewUser['mobile']) ?>" dir="ltr" disabled></div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-        <div class="form-group"><label class="form-label">پایه</label><select class="select" name="grade"><?php for($g=7;$g<=12;$g++): ?><option value="<?= $g ?>" <?= (int)$viewUser['grade']===$g?'selected':'' ?>>پایه <?= num_fa($g) ?></option><?php endfor; ?></select></div>
-        <div class="form-group"><label class="form-label">رشته/شاخه</label><select class="select" name="major"><?php foreach(major_options() as $code=>$label): ?><option value="<?= e($code) ?>" <?= ($viewUser['major'] ?? 'math')===$code?'selected':'' ?>><?= e($label) ?></option><?php endforeach; ?></select></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ مدیریت رمز ═══ -->
+<?php if (($viewUser['role'] ?? 'user') !== 'admin'): ?>
+<div class="admin-card glass" style="margin-top:16px">
+  <div class="admin-card-header"><h3><?= icon('lock') ?> مدیریت رمز عبور</h3></div>
+  <div class="admin-card-body">
+    <div class="alert alert-info" style="margin-bottom:14px">
+      رمز فعلی به‌صورت هش ذخیره شده و قابل مشاهده نیست. رمز جدید تعیین کنید.
+    </div>
+    <form method="post" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+      <input type="hidden" name="action" value="reset_password">
+      <div class="form-group" style="flex:1; min-width:200px; margin:0">
+        <label class="form-label">رمز جدید</label>
+        <input class="input" type="text" name="new_password" minlength="6" required autocomplete="off" placeholder="حداقل ۶ کاراکتر">
       </div>
-      <div class="form-group"><label class="form-label">مدرسه</label><input class="input" name="school" value="<?= e($viewUser['school']) ?>" required minlength="2"></div>
-      <button class="btn btn-primary">ذخیره اطلاعات</button>
+      <button class="btn btn-primary" onclick="return confirm('رمز تغییر کند؟')"><?= icon('lock') ?> تغییر رمز</button>
     </form>
   </div>
-
-  <div class="glass" style="padding:18px">
-    <h3 style="color:var(--orange); margin-bottom:12px">اشتراک و مصرف</h3>
-    <table class="admin-table">
-      <tr><th>نقش</th><td><?= e($viewUser['role']) ?></td></tr>
-      <tr><th>وضعیت اشتراک</th><td><?= $sub['active'] ? '<span style="color:var(--success)">فعال</span>' : '<span style="color:var(--danger)">'.e($sub['reason']).'</span>' ?></td></tr>
-      <tr><th>نوع پلن</th><td><?= e($viewUser['subscription_type']) ?></td></tr>
-      <tr><th>شروع</th><td><?= e($viewUser['subscription_start'] ?: '—') ?></td></tr>
-      <tr><th>پایان</th><td><?= e($viewUser['subscription_end'] ?: '—') ?></td></tr>
-      <tr><th>پیام امروز</th><td><?= num_fa($viewUser['messages_used_today']) ?></td></tr>
-      <tr><th>رایگان امروز</th><td><?= num_fa($viewUser['free_used_today']) ?></td></tr>
-      <tr><th>کل پیام اشتراک</th><td><?= num_fa($viewUser['messages_used_total']) ?></td></tr>
-      <tr><th>عضویت</th><td><?= e($viewUser['created_at']) ?></td></tr>
-    </table>
-  </div>
 </div>
+<?php endif; ?>
 
-<div class="glass" style="padding:18px; margin-top:16px">
-  <h3 style="color:var(--orange); margin-bottom:12px">مدیریت رمز عبور</h3>
-  <div class="alert alert-info" style="margin-bottom:12px">
-    رمز فعلی کاربران به‌صورت هش امن ذخیره می‌شود و قابل مشاهده نیست. از این بخش می‌توانی رمز جدید تعیین کنی.
-  </div>
-  <?php if (($viewUser['role'] ?? 'user') !== 'admin'): ?>
-  <form method="post" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
-    <input type="hidden" name="action" value="reset_password">
-    <div class="form-group" style="flex:1; min-width:220px">
-      <label class="form-label">رمز جدید کاربر</label>
-      <input class="input" type="text" name="new_password" minlength="6" required autocomplete="off" placeholder="حداقل ۶ کاراکتر">
-    </div>
-    <button class="btn btn-primary" onclick="return confirm('رمز این کاربر تغییر کند؟ نشست‌های قبلی او هم خارج می‌شود.')"><?= icon('lock') ?> تغییر رمز</button>
-  </form>
-  <?php else: ?>
-    <div class="alert alert-error">برای امنیت، رمز حساب ادمین از این صفحه قابل تغییر نیست.</div>
-  <?php endif; ?>
-</div>
-
-
-  <div class="glass" style="padding:18px; margin-top:16px">
-    <h3 style="color:var(--orange); margin-bottom:12px">مدیریت تخفیف‌های اختصاصی</h3>
+<!-- ═══ تخفیف‌ها ═══ -->
+<div class="admin-card glass" style="margin-top:16px">
+  <div class="admin-card-header"><h3><?= icon('star') ?> تخفیف‌های اختصاصی</h3></div>
+  <div class="admin-card-body">
     <form method="post" style="display:flex; gap:10px; align-items:flex-end; margin-bottom:16px; flex-wrap:wrap">
       <input type="hidden" name="action" value="save_discount">
-      <div class="form-group" style="flex:1; min-width:120px">
+      <div class="form-group" style="flex:1; min-width:120px; margin:0">
         <label class="form-label">انتخاب پلن</label>
         <select class="select" name="plan_code">
           <option value="3h">۳ ساعته</option>
@@ -173,21 +193,22 @@ $messages = $messagesStmt->fetchAll();
           <option value="monthly">ماهانه</option>
         </select>
       </div>
-      <div class="form-group" style="flex:1; min-width:120px">
+      <div class="form-group" style="min-width:100px; margin:0">
         <label class="form-label">درصد تخفیف (%)</label>
         <input class="input" type="number" name="discount_percent" min="0" max="100" placeholder="مثلا 30" required>
       </div>
       <button class="btn btn-primary">ثبت تخفیف</button>
     </form>
-    
-    <div style="overflow-x:auto">
+
+    <div class="admin-table-wrap">
       <table class="admin-table">
         <thead><tr><th>پلن</th><th>تخفیف</th><th>تاریخ ثبت</th><th>عملیات</th></tr></thead>
         <tbody>
-          <?php 
+          <?php
           $discounts = db()->prepare("SELECT * FROM user_discounts WHERE user_id=?");
           $discounts->execute([$id]);
-          foreach($discounts->fetchAll() as $d): 
+          $discRows = $discounts->fetchAll();
+          foreach($discRows as $d):
             $pLabel = ['3h'=>'۳ ساعته','weekly'=>'هفتگی','monthly'=>'ماهانه'][$d['plan_code']] ?? $d['plan_code'];
           ?>
             <tr>
@@ -202,43 +223,92 @@ $messages = $messagesStmt->fetchAll();
                 </form>
               </td>
             </tr>
-          <?php endforeach; if(!$discounts->fetchAll()): ?>
-            <tr><td colspan="4" style="text-align:center;color:var(--text-dim)">تخفیفی تعریف نشده است.</td></tr>
+          <?php endforeach; if(!$discRows): ?>
+            <tr><td colspan="4" class="admin-empty">تخفیفی تعریف نشده است.</td></tr>
           <?php endif; ?>
         </tbody>
       </table>
     </div>
   </div>
-
-<div class="glass" style="padding:18px; margin-top:16px">
-  <h3 style="color:var(--orange); margin-bottom:12px">آخرین چت‌ها</h3>
-  <div style="overflow-x:auto"><table class="admin-table">
-    <thead><tr><th>#</th><th>عنوان</th><th>کتاب</th><th>سنجاق</th><th>ایجاد</th><th>بروزرسانی</th></tr></thead><tbody>
-    <?php foreach($chats as $c): ?><tr><td><?= num_fa($c['id']) ?></td><td><?= e($c['title']) ?></td><td><?= e($c['book_title'] ?: 'عمومی') ?></td><td><?= $c['is_pinned']?'بله':'خیر' ?></td><td><?= e($c['created_at']) ?></td><td><?= e($c['updated_at']) ?></td></tr><?php endforeach; if(!$chats): ?><tr><td colspan="6" style="text-align:center;color:var(--text-dim)">چتی وجود ندارد.</td></tr><?php endif; ?>
-    </tbody>
-  </table></div>
 </div>
 
-<div class="glass" style="padding:18px; margin-top:16px">
-  <h3 style="color:var(--orange); margin-bottom:12px">آخرین پیام‌ها</h3>
-  <div style="overflow-x:auto"><table class="admin-table">
-    <thead><tr><th>#</th><th>نقش</th><th>چت</th><th>کتاب</th><th>متن</th><th>پیوست</th><th>تاریخ</th></tr></thead><tbody>
-    <?php foreach($messages as $m): ?><tr><td><?= num_fa($m['id']) ?></td><td><?= e($m['role']) ?></td><td><?= e($m['chat_title'] ?: '—') ?></td><td><?= e($m['book_title'] ?: '—') ?></td><td style="min-width:260px; max-width:520px"><?= e(mb_substr($m['content'], 0, 220)) ?><?= mb_strlen($m['content'])>220?'…':'' ?></td><td><?= e($m['attachment'] ?: '—') ?></td><td><?= e($m['created_at']) ?></td></tr><?php endforeach; if(!$messages): ?><tr><td colspan="7" style="text-align:center;color:var(--text-dim)">پیامی وجود ندارد.</td></tr><?php endif; ?>
-    </tbody>
-  </table></div>
+<!-- ═══ چت‌ها ═══ -->
+<div class="admin-card glass" style="margin-top:16px">
+  <div class="admin-card-header"><h3><?= icon('chat') ?> آخرین چت‌ها</h3></div>
+  <div class="admin-card-body" style="padding:0">
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>#</th><th>عنوان</th><th>کتاب</th><th>سنجاق</th><th>ایجاد</th><th>بروزرسانی</th></tr></thead>
+        <tbody>
+        <?php foreach($chats as $c): ?>
+          <tr>
+            <td><?= num_fa($c['id']) ?></td>
+            <td><?= e($c['title']) ?></td>
+            <td><?= e($c['book_title'] ?: 'عمومی') ?></td>
+            <td><?= $c['is_pinned']?'بله':'خیر' ?></td>
+            <td><?= e($c['created_at']) ?></td>
+            <td><?= e($c['updated_at']) ?></td>
+          </tr>
+        <?php endforeach; if(!$chats): ?>
+          <tr><td colspan="6" class="admin-empty">چتی وجود ندارد.</td></tr>
+        <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
-<div class="glass" style="padding:18px; margin-top:16px">
-  <h3 style="color:var(--orange); margin-bottom:12px">تراکنش‌ها</h3>
-  <div style="overflow-x:auto"><table class="admin-table">
-    <thead><tr><th>#</th><th>پلن</th><th>مبلغ</th><th>وضعیت</th><th>Ref</th><th>تاریخ</th></tr></thead><tbody>
-    <?php foreach($transactions as $t): ?><tr><td><?= num_fa($t['id']) ?></td><td><?= e($t['plan_code']) ?></td><td><?= format_price($t['amount']) ?></td><td><?= e($t['status']) ?></td><td><?= e($t['ref_id'] ?: '—') ?></td><td><?= e($t['created_at']) ?></td></tr><?php endforeach; if(!$transactions): ?><tr><td colspan="6" style="text-align:center;color:var(--text-dim)">تراکنشی وجود ندارد.</td></tr><?php endif; ?>
-    </tbody>
-  </table></div>
+<!-- ═══ پیام‌ها ═══ -->
+<div class="admin-card glass" style="margin-top:16px">
+  <div class="admin-card-header"><h3><?= icon('send') ?> آخرین پیام‌ها</h3></div>
+  <div class="admin-card-body" style="padding:0">
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>#</th><th>نقش</th><th>چت</th><th>کتاب</th><th>متن</th><th>پیوست</th><th>تاریخ</th></tr></thead>
+        <tbody>
+        <?php foreach($messages as $m): ?>
+          <tr>
+            <td><?= num_fa($m['id']) ?></td>
+            <td><?= e($m['role']) ?></td>
+            <td><?= e($m['chat_title'] ?: '—') ?></td>
+            <td><?= e($m['book_title'] ?: '—') ?></td>
+            <td style="max-width:320px; white-space:normal"><?= e(mb_substr($m['content'], 0, 180)) ?><?= mb_strlen($m['content'])>180?'…':'' ?></td>
+            <td><?= e($m['attachment'] ?: '—') ?></td>
+            <td><?= e($m['created_at']) ?></td>
+          </tr>
+        <?php endforeach; if(!$messages): ?>
+          <tr><td colspan="7" class="admin-empty">پیامی وجود ندارد.</td></tr>
+        <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
-<style>
-.user-detail-grid { display:grid; grid-template-columns:1fr; gap:16px; }
-@media (min-width:900px){ .user-detail-grid { grid-template-columns:1fr 1fr; } }
-</style>
+<!-- ═══ تراکنش‌ها ═══ -->
+<div class="admin-card glass" style="margin-top:16px">
+  <div class="admin-card-header"><h3><?= icon('wallet') ?> تراکنش‌ها</h3></div>
+  <div class="admin-card-body" style="padding:0">
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>#</th><th>پلن</th><th>مبلغ</th><th>وضعیت</th><th>Ref</th><th>تاریخ</th></tr></thead>
+        <tbody>
+        <?php foreach($transactions as $t): ?>
+          <tr>
+            <td><?= num_fa($t['id']) ?></td>
+            <td class="font-mono text-sm"><?= e($t['plan_code']) ?></td>
+            <td style="font-weight:700"><?= format_price($t['amount']) ?></td>
+            <td><span class="status-badge <?= $t['status']==='paid'?'status-approved':'status-pending' ?>"><?= e($t['status']) ?></span></td>
+            <td class="font-mono text-sm"><?= e($t['ref_id'] ?: '—') ?></td>
+            <td><?= e($t['created_at']) ?></td>
+          </tr>
+        <?php endforeach; if(!$transactions): ?>
+          <tr><td colspan="6" class="admin-empty">تراکنشی وجود ندارد.</td></tr>
+        <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <?php include __DIR__ . '/_footer.php'; ?>

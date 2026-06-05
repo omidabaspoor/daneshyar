@@ -66,6 +66,9 @@ define('CARD_BANK',      env('CARD_BANK', ''));
 define('CONTACT_PHONE',    env('CONTACT_PHONE', ''));
 define('CONTACT_TELEGRAM', env('CONTACT_TELEGRAM', ''));
 
+// -------- فروش اشتراک --------
+define('SALES_ENABLED', (bool)env('SALES_ENABLED', true));
+
 // -------- منطقه زمانی --------
 date_default_timezone_set('Asia/Tehran');
 
