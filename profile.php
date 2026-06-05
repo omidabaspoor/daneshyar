@@ -25,13 +25,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         $newPass   = (string)($_POST['new_password'] ?? '');
         $curPass   = (string)($_POST['current_password'] ?? '');
 
-        if ($firstName === '' || $lastName === '') {
-            $editMsg = 'نام و نام خانوادگی الزامی است.'; $editType = 'error';
+        if (!is_valid_person_name($firstName) || !is_valid_person_name($lastName)) {
+            $editMsg = 'نام و نام خانوادگی باید واقعی و حداقل ۲ حرفی باشد.'; $editType = 'error';
+        } elseif (!is_valid_school_name($school)) {
+            $editMsg = 'نام مدرسه الزامی است و باید معتبر وارد شود.'; $editType = 'error';
         } elseif ($grade < 7 || $grade > 12) {
             $editMsg = 'پایه نامعتبر است.'; $editType = 'error';
         } else {
             if ($newPass !== '') {
-                if (!password_verify($curPass, $user['password'])) {
+                if (!verify_user_password($curPass, $user['password'], (int)$user['id'])) {
                     $editMsg = 'رمز عبور فعلی اشتباه است.'; $editType = 'error';
                 } elseif (mb_strlen($newPass) < 6) {
                     $editMsg = 'رمز جدید حداقل ۶ کاراکتر باشد.'; $editType = 'error';
@@ -68,6 +70,12 @@ include __DIR__ . '/includes/header.php';
 <?php if (isset($_GET['activated'])): ?>
   <div class="alert alert-success" style="max-width:900px; margin:0 auto 14px">
     <?= icon('check') ?> اشتراک با موفقیت فعال شد!
+  </div>
+<?php endif; ?>
+
+<?php if (isset($_GET['complete'])): ?>
+  <div class="alert alert-info" style="max-width:900px; margin:0 auto 14px">
+    <?= icon('warning') ?> برای ادامه استفاده، لطفاً نام واقعی و نام مدرسه را تکمیل کن.
   </div>
 <?php endif; ?>
 
@@ -168,7 +176,7 @@ include __DIR__ . '/includes/header.php';
       </div>
       <div class="form-group">
         <label class="form-label">مدرسه</label>
-        <input class="input" name="school" value="<?= e($user['school']) ?>">
+        <input class="input" name="school" value="<?= e($user['school']) ?>" required minlength="2">
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
         <div class="form-group">
@@ -292,7 +300,7 @@ if (window.location.hash === '#receipts') {
   if (el) { el.scrollIntoView({behavior:'smooth'}); el.style.outline='2px solid var(--orange)'; setTimeout(function(){ el.style.outline=''; }, 2000); }
 }
 // اگه editMsg وجود داشت، بخش ویرایش باز باشه
-<?php if ($editMsg): ?>
+<?php if ($editMsg || isset($_GET['complete'])): ?>
 document.getElementById('editSection').style.display = 'block';
 <?php endif; ?>
 </script>

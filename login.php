@@ -24,9 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = db()->prepare("SELECT * FROM users WHERE mobile=?");
             $stmt->execute([$mobile]);
             $user = $stmt->fetch();
-            if (!$user || !password_verify($password, $user['password'])) {
+            if (!$user || !verify_user_password($password, $user['password'] ?? '', (int)($user['id'] ?? 0))) {
                 $error = 'شماره موبایل یا رمز عبور اشتباه است.';
+            } elseif (is_banned($user)) {
+                $error = 'حساب شما مسدود شده است. برای اطلاعات بیشتر با پشتیبانی تماس بگیرید.';
             } else {
+                // برای جلوگیری از خروج بعد از رفرش در هاست‌های cPanel، ورود پایدار پیش‌فرض فعال است.
                 login_user((int)$user['id'], $remember);
                 redirect(BASE_URL . '/chat.php');
             }
@@ -90,7 +93,7 @@ include __DIR__ . '/includes/header.php';
       </div>
 
       <div class="check-row" style="margin-bottom:18px">
-        <input type="checkbox" name="remember" id="remember" value="1">
+        <input type="checkbox" name="remember" id="remember" value="1" checked>
         <label for="remember" style="font-size:13px; cursor:pointer">مرا به خاطر بسپار (۳۰ روز)</label>
       </div>
 

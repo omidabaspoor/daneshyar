@@ -20,8 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password          = (string)($_POST['password'] ?? '');
         $accept            = isset($_POST['accept']);
 
-        if ($old['first_name']==='' || $old['last_name']==='') {
-            $error = 'نام و نام خانوادگی الزامی است.';
+        if (!is_valid_person_name($old['first_name']) || !is_valid_person_name($old['last_name'])) {
+            $error = 'نام و نام خانوادگی باید واقعی و حداقل ۲ حرفی باشد.';
+        } elseif (!is_valid_school_name($old['school'])) {
+            $error = 'نام مدرسه الزامی است و باید معتبر وارد شود.';
         } elseif (!is_valid_mobile($old['mobile'])) {
             $error = 'شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد.';
         } elseif (mb_strlen($password) < 6) {
@@ -41,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $hash = password_hash($password, PASSWORD_BCRYPT);
                 db()->prepare("INSERT INTO users (first_name,last_name,mobile,password,grade,major,school,last_reset_date) VALUES (?,?,?,?,?,?,?,CURDATE())")
                     ->execute([$old['first_name'],$old['last_name'],$old['mobile'],$hash,$old['grade'],$old['major'],$old['school']]);
-                $_SESSION['user_id'] = (int)db()->lastInsertId();
+                login_user((int)db()->lastInsertId(), true);
                 redirect(BASE_URL . '/chat.php');
             }
         }
@@ -127,8 +129,8 @@ include __DIR__ . '/includes/header.php';
         </div>
 
         <div class="form-group">
-          <label class="form-label">نام مدرسه <small style="color:var(--text-muted)">(اختیاری)</small></label>
-          <input class="input" name="school" value="<?= e($old['school']) ?>">
+          <label class="form-label">نام مدرسه</label>
+          <input class="input" name="school" value="<?= e($old['school']) ?>" required minlength="2">
         </div>
         <div class="reg-actions">
           <button class="btn btn-ghost" type="button" data-prev>برگشت</button>
