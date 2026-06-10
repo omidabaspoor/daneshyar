@@ -189,7 +189,7 @@ update_chat_timestamp($chat_id);
 $bookContext = '';
 if ($book) {
     try {
-        $chunks = find_relevant_chunks((int)$book['id'], $userContent, 4, 12000);
+        $chunks = find_relevant_chunks((int)$book['id'], $userContent, 6, 12000);
         if (!empty($chunks)) {
             $bookContext = build_book_context($chunks, $book);
         }

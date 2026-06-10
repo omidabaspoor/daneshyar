@@ -207,4 +207,62 @@ $ogImage        = $ogImage ?? ($seoDomain . '/assets/img/logo.png');
 </script>
 <?php endif; ?>
 
+<?php
+// ───── اعلان همگانی (پاپ‌آپ وسط صفحه برای کاربران لاگین‌شده) ─────
+$dyAnnouncement = $user ? active_announcement() : null;
+if ($dyAnnouncement):
+?>
+<div class="dy-ann-overlay" id="dyAnnOverlay" data-ann-id="<?= e($dyAnnouncement['id']) ?>" role="dialog" aria-modal="true" aria-labelledby="dyAnnTitle">
+  <div class="dy-ann-modal">
+    <div class="dy-ann-icon" aria-hidden="true"><?= icon('sparkle') ?></div>
+    <h3 class="dy-ann-title" id="dyAnnTitle"><?= e($dyAnnouncement['title']) ?></h3>
+    <div class="dy-ann-text"><?= nl2br(e($dyAnnouncement['text'])) ?></div>
+    <button type="button" class="dy-ann-btn" id="dyAnnClose"><?= icon('check') ?> متوجه شدم</button>
+  </div>
+</div>
+<style>
+.dy-ann-overlay{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;
+  padding:20px;background:rgba(8,8,14,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.dy-ann-overlay.show{display:flex;animation:dyAnnFade .2s ease}
+@keyframes dyAnnFade{from{opacity:0}to{opacity:1}}
+.dy-ann-modal{width:100%;max-width:440px;background:linear-gradient(160deg,#16161f,#0f0f17);
+  border:1px solid rgba(235,124,42,.35);border-radius:20px;padding:28px 24px;text-align:center;
+  box-shadow:0 24px 70px rgba(0,0,0,.6);animation:dyAnnPop .25s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes dyAnnPop{from{transform:translateY(16px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+.dy-ann-icon{width:60px;height:60px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(235,124,42,.14);color:#eb7c2a}
+.dy-ann-icon svg{width:30px;height:30px}
+.dy-ann-title{margin:0 0 10px;font-size:19px;font-weight:800;color:#fff}
+.dy-ann-text{color:#cfcfda;font-size:15px;line-height:2;margin-bottom:22px;white-space:pre-line;
+  max-height:46vh;overflow:auto}
+.dy-ann-btn{display:inline-flex;align-items:center;gap:8px;justify-content:center;width:100%;
+  padding:13px 18px;border:none;border-radius:13px;cursor:pointer;font-family:inherit;font-size:15px;
+  font-weight:800;color:#fff;background:linear-gradient(135deg,#eb7c2a,#f0a050)}
+.dy-ann-btn svg{width:18px;height:18px}
+.dy-ann-btn:active{transform:scale(.98)}
+</style>
+<script>
+(function(){
+  var ov = document.getElementById('dyAnnOverlay');
+  if(!ov) return;
+  var id = ov.getAttribute('data-ann-id') || '0';
+  var key = 'dy_ann_dismissed';
+  var seen = '';
+  try { seen = localStorage.getItem(key) || ''; } catch(e) {}
+  if (seen === id) return; // این اعلان قبلاً بسته شده
+  ov.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  function dismiss(){
+    ov.classList.remove('show');
+    document.body.style.overflow = '';
+    try { localStorage.setItem(key, id); } catch(e) {}
+  }
+  var btn = document.getElementById('dyAnnClose');
+  btn && btn.addEventListener('click', dismiss);
+  ov.addEventListener('click', function(e){ if(e.target === ov) dismiss(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') dismiss(); });
+})();
+</script>
+<?php endif; ?>
+
 <main class="<?= e($mainClass) ?>">

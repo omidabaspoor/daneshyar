@@ -324,6 +324,125 @@ function ensure_discounts_schema() {
     } catch (Throwable $e) {}
 }
 
+/* ============================================================
+ *  تنظیمات عمومی برنامه (key/value) – تخفیف همگانی، اعلان و ...
+ * ============================================================ */
+function ensure_settings_schema() {
+    static $done = false;
+    if ($done) return;
+    $done = true;
+    try {
+        db()->exec("CREATE TABLE IF NOT EXISTS app_settings (
+            k VARCHAR(64) PRIMARY KEY,
+            v TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    } catch (Throwable $e) {}
+}
+
+function get_setting($key, $default = null) {
+    ensure_settings_schema();
+    $cache = &_settings_cache();
+    if (array_key_exists($key, $cache)) return $cache[$key];
+    try {
+        $s = db()->prepare("SELECT v FROM app_settings WHERE k=?");
+        $s->execute([$key]);
+        $r = $s->fetch();
+        $val = $r ? $r['v'] : $default;
+    } catch (Throwable $e) {
+        $val = $default;
+    }
+    $cache[$key] = $val;
+    return $val;
+}
+
+/**
+ * کش مشترک تنظیمات. با reference برمی‌گردد تا get/set هر دو
+ * روی همان آرایه کار کنند و نوشتن، مقدار قدیمی را باطل کند.
+ */
+function &_settings_cache() {
+    static $cache = [];
+    return $cache;
+}
+
+function set_setting($key, $val) {
+    ensure_settings_schema();
+    try {
+        db()->prepare("INSERT INTO app_settings (k, v) VALUES (?, ?) ON DUPLICATE KEY UPDATE v=VALUES(v)")
+            ->execute([$key, (string)$val]);
+        // کش را همگام کن تا در همین درخواست مقدار جدید دیده شود
+        $cache = &_settings_cache();
+        $cache[$key] = (string)$val;
+        return true;
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+/**
+ * درصد تخفیف مؤثر برای یک کاربر روی یک پلن.
+ * اولویت: تخفیف اختصاصی کاربر > تخفیف همگانی.
+ * (سیستم تخفیف اختصاصی دست‌نخورده باقی می‌ماند.)
+ */
+function effective_plan_discount($user_id, $plan_code) {
+    $user_id = (int)$user_id;
+    $plan_code = (string)$plan_code;
+
+    // 1) تخفیف اختصاصی کاربر (اولویت اول)
+    if ($user_id > 0) {
+        try {
+            $s = db()->prepare("SELECT discount_percent FROM user_discounts WHERE user_id=? AND plan_code=?");
+            $s->execute([$user_id, $plan_code]);
+            $r = $s->fetch();
+            if ($r && (int)$r['discount_percent'] > 0) {
+                return ['percent' => (int)$r['discount_percent'], 'type' => 'personal'];
+            }
+        } catch (Throwable $e) {}
+    }
+
+    // 2) تخفیف همگانی
+    $g = (int)get_setting('global_discount_percent', '0');
+    if ($g > 0 && $g <= 100) {
+        return ['percent' => $g, 'type' => 'global'];
+    }
+
+    return ['percent' => 0, 'type' => 'none'];
+}
+
+/**
+ * آیا فروش اشتراک فعال است؟
+ * منبع اصلی: تنظیم دیتابیس (sales_enabled). اگر تعریف نشده بود،
+ * به ثابت SALES_ENABLED (از .env) برمی‌گردیم.
+ * این تابع تضمین می‌کند که بستن فروش از پنل، در فرانت هم اعمال شود.
+ */
+function sales_enabled() {
+    $v = get_setting('sales_enabled', null);
+    if ($v === null || $v === '') {
+        return defined('SALES_ENABLED') ? (bool)SALES_ENABLED : true;
+    }
+    return !in_array(strtolower((string)$v), ['0', 'false', 'no', 'off', ''], true);
+}
+
+function set_sales_enabled($on) {
+    return set_setting('sales_enabled', $on ? '1' : '0');
+}
+
+/**
+ * اعلان همگانی فعلی (که ادمین برای همه کاربران می‌گذارد).
+ * خروجی: ['id'=>..., 'text'=>..., 'title'=>...] یا null اگر غیرفعال باشد.
+ */
+function active_announcement() {
+    $on = get_setting('announcement_enabled', '0');
+    if (in_array(strtolower((string)$on), ['0', 'false', 'no', 'off', ''], true)) return null;
+    $text = (string)get_setting('announcement_text', '');
+    if (trim($text) === '') return null;
+    return [
+        'id'    => (string)get_setting('announcement_id', '0'),
+        'title' => (string)get_setting('announcement_title', 'اطلاعیه'),
+        'text'  => $text,
+    ];
+}
+
 function ensure_education_schema() {
     static $done = false;
     if ($done) return;
@@ -360,6 +479,7 @@ function schema_bootstrap_if_needed() {
     ensure_education_schema();
     ensure_discounts_schema();
     ensure_payment_schema();
+    ensure_settings_schema();
 
     // تبدیل کدهای قدیمی رشته
     try {

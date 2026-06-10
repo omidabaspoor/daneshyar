@@ -50,6 +50,7 @@ try {
   </a>
   <a href="<?= BASE_URL ?>/admin/messages.php" class="<?= $adminPage==='messages'?'active':'' ?>"><?= icon('mail') ?> پیام‌ها</a>
   <a href="<?= BASE_URL ?>/admin/pricing.php" class="<?= $adminPage==='pricing'?'active':'' ?>"><?= icon('price') ?> قیمت‌ها</a>
+  <a href="<?= BASE_URL ?>/admin/announcements.php" class="<?= $adminPage==='announcements'?'active':'' ?>"><?= icon('info') ?> اعلان همگانی</a>
   <a href="<?= BASE_URL ?>/admin/transactions.php" class="<?= $adminPage==='trx'?'active':'' ?>"><?= icon('graph') ?> تراکنش‌ها</a>
   <a href="<?= BASE_URL ?>/admin/updater.php" class="<?= $adminPage==='updater'?'active':'' ?>"><?= icon('upload') ?> بروزرسانی فایل‌ها</a>
 
@@ -101,6 +102,7 @@ try {
       </a>
       <a href="<?= BASE_URL ?>/admin/messages.php" class="<?= $adminPage==='messages'?'active':'' ?>"><?= icon('mail') ?> پیام‌ها</a>
       <a href="<?= BASE_URL ?>/admin/pricing.php" class="<?= $adminPage==='pricing'?'active':'' ?>"><?= icon('price') ?> قیمت‌ها</a>
+      <a href="<?= BASE_URL ?>/admin/announcements.php" class="<?= $adminPage==='announcements'?'active':'' ?>"><?= icon('info') ?> اعلان همگانی</a>
       <a href="<?= BASE_URL ?>/admin/transactions.php" class="<?= $adminPage==='trx'?'active':'' ?>"><?= icon('graph') ?> تراکنش‌ها</a>
       <a href="<?= BASE_URL ?>/admin/updater.php" class="<?= $adminPage==='updater'?'active':'' ?>"><?= icon('upload') ?> بروزرسانی فایل‌ها</a>
     </aside>

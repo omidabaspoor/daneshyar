@@ -6,31 +6,45 @@ include __DIR__ . '/_header.php';
 $msg = '';
 $msgType = 'success';
 
-// ─── Toggle فروش ───
+// ─── Toggle فروش (ذخیره در دیتابیس تا فرانت هم اعمال شود) ───
 if (isset($_POST['toggle_sales'])) {
-    $envPath = ROOT_PATH . '/.env';
-    $current = SALES_ENABLED;
-    $newVal  = $current ? 'false' : 'true';
-
-    if (is_file($envPath) && is_writable($envPath)) {
-        $content = file_get_contents($envPath);
-        if (preg_match('/^SALES_ENABLED\s*=/m', $content)) {
-            $content = preg_replace('/^SALES_ENABLED\s*=.*/m', 'SALES_ENABLED=' . $newVal, $content);
-        } else {
-            $content .= "\nSALES_ENABLED=" . $newVal . "\n";
-        }
-        file_put_contents($envPath, $content);
-        putenv("SALES_ENABLED=$newVal");
-        $_ENV['SALES_ENABLED'] = $newVal;
-        $msg = $newVal === 'true' ? '✓ فروش اشتراک فعال شد.' : '✓ فروش اشتراک غیرفعال شد.';
+    $newOn = !sales_enabled();
+    if (set_sales_enabled($newOn)) {
+        $msg = $newOn ? '✓ فروش اشتراک فعال شد.' : '✓ فروش اشتراک غیرفعال شد. (صفحه قیمت و پرداخت برای کاربران بسته شد)';
     } else {
-        $msg = '❌ فایل .env قابل نوشتن نیست. دسترسی فایل رو بررسی کن.';
+        $msg = '❌ ذخیره وضعیت فروش ناموفق بود.';
         $msgType = 'error';
     }
 }
 
-$salesOn = env('SALES_ENABLED', true);
-if (is_string($salesOn)) $salesOn = !in_array(strtolower($salesOn), ['false', '0', 'no', ''], true);
+$salesOn = sales_enabled();
+
+// ─── تخفیف همگانی ───
+if (isset($_POST['save_global_discount'])) {
+    $g = (int)($_POST['global_discount_percent'] ?? 0);
+    $g = max(0, min(100, $g));
+    set_setting('global_discount_percent', (string)$g);
+    $msg = $g > 0
+        ? '✓ تخفیف همگانی ' . num_fa($g) . '٪ روی همه کاربران اعمال شد.'
+        : '✓ تخفیف همگانی غیرفعال شد.';
+}
+if (isset($_POST['clear_global_discount'])) {
+    set_setting('global_discount_percent', '0');
+    $msg = '✓ تخفیف همگانی حذف شد. (تخفیف‌های اختصاصی کاربران دست‌نخورده باقی ماند)';
+}
+// ─── حذف کامل همه تخفیف‌ها (همگانی + همه اختصاصی‌ها) ───
+if (isset($_POST['reset_all_discounts'])) {
+    set_setting('global_discount_percent', '0');
+    $deleted = 0;
+    try {
+        $deleted = db()->exec("DELETE FROM user_discounts");
+    } catch (Throwable $e) {}
+    $msg = '✓ همه تخفیف‌ها صفر شد: تخفیف همگانی حذف و ' . num_fa((int)$deleted) . ' تخفیف اختصاصی پاک شد.';
+}
+$globalDiscount = (int)get_setting('global_discount_percent', '0');
+try {
+    $personalDiscountCount = (int)db()->query("SELECT COUNT(*) FROM user_discounts WHERE discount_percent > 0")->fetchColumn();
+} catch (Throwable $e) { $personalDiscountCount = 0; }
 
 // ─── ذخیره قیمت‌ها ───
 if (isset($_POST['plans'])) {
@@ -91,6 +105,54 @@ $plans = db()->query("SELECT * FROM pricing ORDER BY price")->fetchAll();
           onclick="return confirm('<?= $salesOn ? 'فروش غیرفعال بشه؟' : 'فروش فعال بشه؟' ?>')">
           <?= icon($salesOn ? 'close' : 'check') ?>
           <?= $salesOn ? 'غیرفعال کردن فروش' : 'فعال کردن فروش' ?>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ تخفیف همگانی ═══ -->
+<div class="admin-card glass" style="margin-top:16px; border-right:3px solid <?= $globalDiscount > 0 ? 'var(--success)' : 'var(--border)' ?>">
+  <div class="admin-card-header">
+    <h3><?= icon('sparkle') ?> تخفیف همگانی (همه کاربران)</h3>
+  </div>
+  <div class="admin-card-body">
+    <p class="text-sm text-dim" style="margin-bottom:14px">
+      این تخفیف روی <b>همه پلن‌ها برای همه کاربران</b> اعمال می‌شود.
+      اگر کاربری <b>تخفیف اختصاصی</b> داشته باشد، تخفیف اختصاصی او اولویت دارد و این تخفیف برای او اعمال نمی‌شود.
+      <?php if ($globalDiscount > 0): ?>
+        <br><b style="color:var(--success)">هم‌اکنون فعال: <?= num_fa($globalDiscount) ?>٪</b>
+      <?php else: ?>
+        <br>هم‌اکنون: <b>غیرفعال</b>
+      <?php endif; ?>
+    </p>
+    <form method="post" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+      <div class="form-group" style="min-width:140px; margin:0">
+        <label class="form-label">درصد تخفیف همگانی (%)</label>
+        <input class="input" type="number" name="global_discount_percent" min="0" max="100"
+               value="<?= e($globalDiscount) ?>" placeholder="مثلا 20">
+      </div>
+      <button class="btn btn-primary" name="save_global_discount" value="1"><?= icon('check') ?> اعمال تخفیف همگانی</button>
+      <?php if ($globalDiscount > 0): ?>
+        <button class="btn btn-danger" name="clear_global_discount" value="1"
+                onclick="return confirm('تخفیف همگانی حذف شود؟ (تخفیف‌های اختصاصی دست‌نخورده می‌مانند)')">
+          <?= icon('trash') ?> حذف تخفیف همگانی
+        </button>
+      <?php endif; ?>
+    </form>
+
+    <!-- حذف کامل همه تخفیف‌ها -->
+    <div style="margin-top:18px; padding-top:16px; border-top:1px dashed var(--border)">
+      <p class="text-sm text-dim" style="margin-bottom:10px">
+        <b style="color:var(--danger)">حذف کامل همه تخفیف‌ها:</b>
+        این دکمه هم تخفیف همگانی و هم <b>همه تخفیف‌های اختصاصی کاربران</b> را یکجا صفر می‌کند.
+        <?php if ($personalDiscountCount > 0): ?>
+          (الان <?= num_fa($personalDiscountCount) ?> تخفیف اختصاصی فعال است.)
+        <?php endif; ?>
+      </p>
+      <form method="post" onsubmit="return confirm('مطمئنی؟ همه تخفیف‌ها (همگانی و همه اختصاصی‌ها) صفر می‌شوند و قابل بازگشت نیست.')">
+        <button class="btn btn-danger" name="reset_all_discounts" value="1">
+          <?= icon('trash') ?> صفر کردن همه تخفیف‌ها (همگانی + اختصاصی)
         </button>
       </form>
     </div>

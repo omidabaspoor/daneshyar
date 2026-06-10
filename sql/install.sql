@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS `books` (
   `file_names` TEXT DEFAULT NULL,
   `cached_text` LONGTEXT DEFAULT NULL,
   `chunks_count` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `extract_mode` VARCHAR(12) NOT NULL DEFAULT 'summary',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   INDEX (`grade`, `major`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -56,6 +57,17 @@ CREATE TABLE IF NOT EXISTS `book_chunks` (
   INDEX `idx_chunk_book` (`book_id`),
   INDEX `idx_chunk_keywords` (`book_id`, `chunk_index`),
   FOREIGN KEY (`book_id`) REFERENCES `books`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------- وضعیت کار استخراج تکه‌تکه کتاب ----------------
+CREATE TABLE IF NOT EXISTS `book_extract_jobs` (
+  `book_id` INT PRIMARY KEY,
+  `plan_json` MEDIUMTEXT,
+  `accumulated` LONGTEXT,
+  `current_step` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `total_steps` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `status` VARCHAR(12) NOT NULL DEFAULT 'running',
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------- قیمت‌ها ----------------
@@ -135,6 +147,14 @@ CREATE TABLE IF NOT EXISTS `card_receipts` (
   INDEX (`status`),
   INDEX (`created_at`),
   INDEX `idx_activate_at` (`status`, `activate_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------- تنظیمات عمومی برنامه (key/value) ----------------
+-- استفاده: تخفیف همگانی، وضعیت فروش، اعلان همگانی و ...
+CREATE TABLE IF NOT EXISTS `app_settings` (
+  `k` VARCHAR(64) PRIMARY KEY,
+  `v` TEXT,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------- نشست‌های کاربران (سشن در دیتابیس) ----------------
