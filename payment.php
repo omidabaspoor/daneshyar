@@ -6,23 +6,26 @@ require_login();
 $user      = current_user();
 $plan_code = trim($_GET['plan'] ?? '');
 
+// اگر فروش از پنل بسته شده، اجازه پرداخت/خرید نده
+if (!sales_enabled()) {
+    redirect(BASE_URL . '/pricing.php');
+}
+
 $stmt = db()->prepare("SELECT * FROM pricing WHERE plan_code=?");
 $stmt->execute([$plan_code]);
 $plan = $stmt->fetch();
 if (!$plan) redirect(BASE_URL . '/pricing.php');
 
-// تخفیف
-$finalPrice  = (int)$plan['price'];
-$discountPct = 0;
-try {
-    $ds = db()->prepare("SELECT discount_percent FROM user_discounts WHERE user_id=? AND plan_code=?");
-    $ds->execute([$user['id'], $plan_code]);
-    $d = $ds->fetch();
-    if ($d && (int)$d['discount_percent'] > 0) {
-        $discountPct = (int)$d['discount_percent'];
-        $finalPrice  = (int)round($plan['price'] * (1 - $discountPct / 100));
-    }
-} catch (Throwable $e) {}
+// تخفیف مؤثر: اختصاصی کاربر اولویت دارد، سپس تخفیف همگانی
+$finalPrice   = (int)$plan['price'];
+$discountPct  = 0;
+$discountType = 'none';
+$eff = effective_plan_discount((int)$user['id'], $plan_code);
+if ($eff['percent'] > 0) {
+    $discountPct  = $eff['percent'];
+    $discountType = $eff['type'];
+    $finalPrice   = (int)round($plan['price'] * (1 - $discountPct / 100));
+}
 
 $error   = '';
 $success = false;
@@ -370,7 +373,7 @@ include __DIR__ . '/includes/header.php';
           <span class="plan-price-cur">تومان</span>
         </div>
         <?php if ($discountPct > 0): ?>
-          <div class="plan-disc-note"><?= icon('sparkle') ?> تخفیف اختصاصی <?= num_fa($discountPct) ?>٪</div>
+          <div class="plan-disc-note"><?= icon('sparkle') ?> <?= $discountType === 'global' ? 'تخفیف ویژه' : 'تخفیف اختصاصی' ?> <?= num_fa($discountPct) ?>٪</div>
         <?php endif; ?>
       </div>
     </div>

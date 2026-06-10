@@ -12,9 +12,29 @@ $plans = db()->query("SELECT * FROM pricing ORDER BY price ASC")->fetchAll();
 $planCount = count($plans);
 $user  = current_user();
 $sub   = $user ? subscription_status($user) : null;
+$salesOn = sales_enabled();
 
 include __DIR__ . '/includes/header.php';
 ?>
+
+<?php if (!$salesOn): ?>
+<section class="pricing-clean-page">
+  <div class="pricing-clean-hero">
+    <span class="pricing-clean-badge"><?= icon('clock') ?> فروش موقتاً غیرفعال است</span>
+    <h1>فروش اشتراک فعلاً بسته است</h1>
+    <p>
+      در حال حاضر امکان خرید اشتراک وجود ندارد. می‌توانی از پلن رایگان روزانه استفاده کنی.
+      به‌زودی فروش دوباره فعال می‌شود؛ ممنون از صبوری‌ات. 🙏
+    </p>
+    <?php if ($user): ?>
+      <a href="<?= BASE_URL ?>/chat.php" class="btn btn-primary" style="margin-top:14px"><?= icon('chat') ?> برگشت به چت</a>
+    <?php else: ?>
+      <a href="<?= BASE_URL ?>/login.php" class="btn btn-primary" style="margin-top:14px"><?= icon('login') ?> ورود</a>
+    <?php endif; ?>
+  </div>
+</section>
+<?php include __DIR__ . '/includes/footer.php'; return; ?>
+<?php endif; ?>
 
 <section class="pricing-clean-page">
   <div class="pricing-clean-hero">
@@ -59,17 +79,14 @@ include __DIR__ . '/includes/header.php';
         $featured = $p['plan_code'] === 'weekly';
         $finalPrice  = (int)$p['price'];
         $discountPct = 0;
+        $discountType = 'none';
 
-        if ($user) {
-            try {
-                $ds = db()->prepare("SELECT discount_percent FROM user_discounts WHERE user_id=? AND plan_code=?");
-                $ds->execute([$user['id'], $p['plan_code']]);
-                $d = $ds->fetch();
-                if ($d) {
-                    $discountPct = (int)$d['discount_percent'];
-                    $finalPrice  = (int)round($p['price'] * (1 - $discountPct / 100));
-                }
-            } catch (Throwable $e) {}
+        // تخفیف مؤثر: اختصاصی کاربر اولویت دارد، سپس تخفیف همگانی
+        $eff = effective_plan_discount($user ? (int)$user['id'] : 0, $p['plan_code']);
+        if ($eff['percent'] > 0) {
+            $discountPct  = $eff['percent'];
+            $discountType = $eff['type'];
+            $finalPrice   = (int)round($p['price'] * (1 - $discountPct / 100));
         }
       ?>
         <article class="pricing-book-card <?= $featured ? 'is-featured' : '' ?>" data-plan-index="<?= $i ?>">
@@ -91,7 +108,7 @@ include __DIR__ . '/includes/header.php';
           </div>
 
           <?php if ($discountPct > 0): ?>
-            <div class="pricing-book-discount"><?= icon('sparkle') ?> تخفیف اختصاصی <?= num_fa($discountPct) ?>٪</div>
+            <div class="pricing-book-discount"><?= icon('sparkle') ?> <?= $discountType === 'global' ? 'تخفیف ویژه' : 'تخفیف اختصاصی' ?> <?= num_fa($discountPct) ?>٪</div>
           <?php endif; ?>
 
           <ul class="pricing-book-list">
