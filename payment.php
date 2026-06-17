@@ -8,7 +8,9 @@ $plan_code = trim($_GET['plan'] ?? '');
 
 // اگر فروش از پنل بسته شده، اجازه پرداخت/خرید نده
 if (!sales_enabled()) {
-    redirect(BASE_URL . '/pricing.php');
+    // لاگ برای دیباگ
+    @error_log("Sales disabled - user tried to access payment for plan: " . $plan_code);
+    redirect(BASE_URL . '/pricing.php?error=sales_disabled');
 }
 
 $stmt = db()->prepare("SELECT * FROM pricing WHERE plan_code=?");

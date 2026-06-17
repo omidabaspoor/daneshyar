@@ -6,7 +6,7 @@ $page = 'pricing';
 $pageTitle = 'قیمت اشتراک';
 $seoTitle = 'قیمت اشتراک دانش‌یار | پلن‌های هوش مصنوعی آموزشی';
 $bodyClass = 'page-pricing';
-$extraCss = ['pricing.css?v=21'];
+$extraCss = ['pricing.css?v=22'];
 
 $plans = db()->query("SELECT * FROM pricing ORDER BY price ASC")->fetchAll();
 $planCount = count($plans);
