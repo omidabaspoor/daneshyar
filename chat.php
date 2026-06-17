@@ -6,7 +6,7 @@ $user = current_user();
 $page = 'chat';
 $pageTitle = 'چت';
 $extraCss = ['chat.css?v=25'];
-$bodyClass = 'has-chat?v=25';
+$bodyClass = 'has-chat';
 $hideSiteChrome = true;
 $fullWidthMain = true;
 
@@ -507,6 +507,6 @@ include __DIR__ . '/includes/header.php';
     activeBookId: '<?= e($activeBookId) ?>'
   };
 </script>
-<script defer src="<?= BASE_URL ?>/assets/js/chat.js?v=25"></script>
+<script defer src="<?= BASE_URL ?>/assets/js/chat.js?v=26"></script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

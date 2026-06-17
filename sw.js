@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daneshyar-v2';
+const CACHE_NAME = 'daneshyar-v3-exam';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE_URLS = [
@@ -6,8 +6,8 @@ const PRECACHE_URLS = [
     '/offline.html',
     '/manifest.json',
     '/assets/css/style.css?v=11',
-    '/assets/css/chat.css?v=16',
-    '/assets/js/chat.js?v=21',
+    '/assets/css/chat.css?v=25',
+    '/assets/js/chat.js?v=26',
     '/assets/img/logo.png',
     '/assets/img/icon-192.png',
     '/assets/img/icon-512.png',
