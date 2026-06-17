@@ -12,8 +12,8 @@
 
 // ⚠ ۱ هسته = فقط ۱ پردازش واقعاً همزمان روی CPU
 // ۳ تا می‌ذاریم چون GD resize سریع تموم می‌شه
-define('MAX_CONCURRENT_IMAGE_PROC', 3);
-define('IMAGE_PROC_WAIT_TIMEOUT', 45);
+define('MAX_CONCURRENT_IMAGE_PROC', 7);      // حداکثر ۷ پردازش همزمان (امن برای ۳ هسته)
+define('IMAGE_PROC_WAIT_TIMEOUT', 90);         // حداکثر ۹۰ ثانیه صبر
 define('IMAGE_PROC_LOCK_DIR', '');
 
 function _lock_dir() {
@@ -79,7 +79,7 @@ function acquire_image_proc_lock($waitTimeout = IMAGE_PROC_WAIT_TIMEOUT) {
             return false;
         }
 
-        usleep(300000); // 300ms
+        usleep(200000); // 200ms - faster polling for better UX under load
     }
 }
 

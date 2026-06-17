@@ -352,6 +352,26 @@
     };
     xhr.onload = () => {
       let data; try { data = JSON.parse(xhr.responseText); } catch(e) { data = {}; }
+
+      // Smart retry for 429 (server busy) - Strong retry for 20 concurrent users
+      if (xhr.status === 429 && data.error) {
+        const retryCount = (meta.retryCount || 0) + 1;
+        if (retryCount <= 18) {
+          // Exponential Backoff: 7s, 10s, 13s, 16s, 20s, 24s, 28s, 33s, 38s, 43s...
+          const waitTime = Math.min(7000 + (retryCount * 3000), 45000);
+          showToast('سرور شلوغ است. ' + Math.round(waitTime/1000) + ' ثانیه دیگر تلاش می‌کنیم...');
+          setTimeout(() => {
+            uploadFile(f, { ...meta, retryCount: retryCount });
+          }, waitTime);
+          return;
+        } else {
+          alert('آپلود پس از چندین تلاش ناموفق بود. لطفاً دوباره تلاش کنید.');
+          pendingFile = null;
+          renderAttachment();
+          return;
+        }
+      }
+
       if (xhr.status === 200 && data.ok) {
         // type رو از سرور بگیر (ممکنه HEIC → JPEG شده باشه)
         const finalType = data.mime || f.type || '';

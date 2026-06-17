@@ -1222,36 +1222,112 @@ body.has-chat { overflow: hidden; height: 100dvh; }
 /* ============================================================
    UX clarity: book picker + notices + simple guide
    ============================================================ */
-.sidebar-notices { display:flex; flex-direction:column; gap:8px; }
+.sidebar-notices { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+}
+
+/* ===== اعلان‌های مینیمال و شیک ===== */
 .dy-notice {
-  display:flex;
-  align-items:flex-start;
-  gap:10px;
-  padding:11px 12px;
-  border-radius:14px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.04);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.035);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
 }
+
+.dy-notice:hover {
+  background: rgba(255,255,255,.055);
+  border-color: var(--border-orange);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+}
+
 .dy-notice-ico {
-  width:32px;
-  height:32px;
-  border-radius:10px;
-  display:grid;
-  place-items:center;
-  flex-shrink:0;
-  background:var(--orange-soft);
-  color:var(--orange);
-  border:1px solid rgba(235,124,42,.25);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--orange-soft);
+  color: var(--orange);
+  border: 1px solid rgba(235,124,42,.3);
+  transition: all 0.2s ease;
 }
-.dy-notice-ico .ico { width:17px; height:17px; }
-.dy-notice-body { min-width:0; display:flex; flex-direction:column; gap:2px; }
-.dy-notice-body b { font-size:12.5px; color:var(--text); line-height:1.5; }
-.dy-notice-body small { font-size:11px; color:var(--text-dim); line-height:1.7; }
-.dy-notice-body a { font-size:11.5px; color:var(--orange); font-weight:700; margin-top:3px; }
-.notice-warning { background:rgba(255,184,107,.08); border-color:rgba(255,184,107,.28); }
-.notice-success { background:rgba(56,217,169,.08); border-color:rgba(56,217,169,.24); }
-.notice-success .dy-notice-ico { color:var(--success); background:rgba(56,217,169,.12); border-color:rgba(56,217,169,.25); }
-.notice-info { background:rgba(235,124,42,.08); border-color:rgba(235,124,42,.24); }
+
+.dy-notice:hover .dy-notice-ico {
+  background: linear-gradient(135deg, var(--orange), var(--orange-2));
+  color: #1a0e05;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(235,124,42,.4);
+}
+
+.dy-notice-ico .ico { 
+  width: 18px; 
+  height: 18px; 
+}
+
+.dy-notice-body { 
+  min-width: 0; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 3px; 
+  flex: 1;
+}
+
+.dy-notice-body b { 
+  font-size: 13px; 
+  color: var(--text); 
+  line-height: 1.4; 
+  font-weight: 700;
+}
+
+.dy-notice-body small { 
+  font-size: 12px; 
+  color: var(--text-dim); 
+  line-height: 1.6; 
+}
+
+.dy-notice-body a { 
+  font-size: 12px; 
+  color: var(--orange); 
+  font-weight: 700; 
+  margin-top: 4px;
+  display: inline-block;
+  transition: color 0.15s ease;
+}
+
+.dy-notice-body a:hover {
+  color: var(--orange-2);
+}
+
+/* رنگ‌بندی انواع اعلان */
+.notice-warning { 
+  background: rgba(255,184,107,.06); 
+  border-color: rgba(255,184,107,.25); 
+}
+
+.notice-success { 
+  background: rgba(56,217,169,.06); 
+  border-color: rgba(56,217,169,.22); 
+}
+
+.notice-success .dy-notice-ico { 
+  color: var(--success); 
+  background: rgba(56,217,169,.12); 
+  border-color: rgba(56,217,169,.3); 
+}
+
+.notice-info { 
+  background: rgba(235,124,42,.05); 
+  border-color: rgba(235,124,42,.22); 
+}
 .welcome-notice { max-width:620px; margin:0 auto 16px; text-align:right; }
 
 

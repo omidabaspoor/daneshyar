@@ -416,11 +416,24 @@ function effective_plan_discount($user_id, $plan_code) {
  * این تابع تضمین می‌کند که بستن فروش از پنل، در فرانت هم اعمال شود.
  */
 function sales_enabled() {
+    // اول از تنظیم دیتابیس چک کن
     $v = get_setting('sales_enabled', null);
-    if ($v === null || $v === '') {
-        return defined('SALES_ENABLED') ? (bool)SALES_ENABLED : true;
+    
+    if ($v !== null && $v !== '') {
+        $val = strtolower(trim((string)$v));
+        if (in_array($val, ['0', 'false', 'no', 'off'], true)) {
+            return false;
+        }
+        return true;
     }
-    return !in_array(strtolower((string)$v), ['0', 'false', 'no', 'off', ''], true);
+    
+    // اگر در دیتابیس نبود، از ثابت .env استفاده کن
+    if (defined('SALES_ENABLED')) {
+        return (bool)SALES_ENABLED;
+    }
+    
+    // پیش‌فرض: فروش فعال باشد
+    return true;
 }
 
 function set_sales_enabled($on) {
@@ -582,11 +595,16 @@ function current_user($fresh = false) {
 }
 
 /**
- * نسخه تازه از کاربر فعلی - cache رو دور می‌زنه.
- * برای جاهایی که بعد از UPDATE نیاز به مقدار جدید داریم.
+ * Force fresh user data from DB (bypasses static cache).
+ * Use this after admin activates subscription so changes are instantly visible.
  */
 function current_user_fresh() {
-    return current_user(true);
+    if (!isset($_SESSION['user_id'])) return null;
+    $stmt = db()->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $u = $stmt->fetch() ?: null;
+    if ($u) $u = reset_daily_if_needed($u);
+    return $u;
 }
 
 function require_login() {
@@ -686,6 +704,17 @@ function reset_daily_if_needed($user) {
 
 function subscription_status($user) {
     if (!$user) return ['active' => false, 'reason' => 'کاربر نامعتبر'];
+
+    // Always fetch fresh data from DB to ensure admin-activated subscriptions are immediately visible
+    // This fixes the "activated in panel but not showing for user" bug
+    if (isset($user['id'])) {
+        $stmt = db()->prepare("SELECT subscription_type, subscription_start, subscription_end, messages_used_today, messages_used_total, free_used_today, last_reset_date FROM users WHERE id = ?");
+        $stmt->execute([(int)$user['id']]);
+        $fresh = $stmt->fetch();
+        if ($fresh) {
+            $user = array_merge($user, $fresh);
+        }
+    }
 
     $type = $user['subscription_type'] ?? 'none';
     if (empty($type) || $type === 'none' || empty($user['subscription_end'])) {

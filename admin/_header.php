@@ -53,6 +53,7 @@ try {
   <a href="<?= BASE_URL ?>/admin/announcements.php" class="<?= $adminPage==='announcements'?'active':'' ?>"><?= icon('info') ?> اعلان همگانی</a>
   <a href="<?= BASE_URL ?>/admin/transactions.php" class="<?= $adminPage==='trx'?'active':'' ?>"><?= icon('graph') ?> تراکنش‌ها</a>
   <a href="<?= BASE_URL ?>/admin/updater.php" class="<?= $adminPage==='updater'?'active':'' ?>"><?= icon('upload') ?> بروزرسانی فایل‌ها</a>
+  <a href="<?= BASE_URL ?>/admin/test.php" class="<?= $adminPage==='test'?'active':'' ?>"><?= icon('check-circle') ?> تست سیستم</a>
 
   <div style="margin-top:auto; padding-top:16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px;">
     <a href="<?= BASE_URL ?>/"><?= icon('home') ?> بازگشت به سایت</a>
@@ -105,6 +106,7 @@ try {
       <a href="<?= BASE_URL ?>/admin/announcements.php" class="<?= $adminPage==='announcements'?'active':'' ?>"><?= icon('info') ?> اعلان همگانی</a>
       <a href="<?= BASE_URL ?>/admin/transactions.php" class="<?= $adminPage==='trx'?'active':'' ?>"><?= icon('graph') ?> تراکنش‌ها</a>
       <a href="<?= BASE_URL ?>/admin/updater.php" class="<?= $adminPage==='updater'?'active':'' ?>"><?= icon('upload') ?> بروزرسانی فایل‌ها</a>
+      <a href="<?= BASE_URL ?>/admin/test.php" class="<?= $adminPage==='test'?'active':'' ?>"><?= icon('check-circle') ?> تست سیستم</a>
     </aside>
 
     <!-- ═══ Main Content ═══ -->

@@ -19,9 +19,9 @@
  * ============================================================
  */
 
-if (!defined('AI_MAX_IMAGE_DIM'))   define('AI_MAX_IMAGE_DIM',   2400);  // حداکثر طول/عرض برای AI
-if (!defined('AI_MAX_IMAGE_BYTES')) define('AI_MAX_IMAGE_BYTES', 8 * 1024 * 1024); // 3MB پس از تبدیل
-if (!defined('AI_JPEG_QUALITY'))    define('AI_JPEG_QUALITY',    90);
+if (!defined('AI_MAX_IMAGE_DIM'))   define('AI_MAX_IMAGE_DIM',   1200); // بهینه‌سازی قوی برای سرعت (۲۰ کاربر همزمان)
+if (!defined('AI_MAX_IMAGE_BYTES')) define('AI_MAX_IMAGE_BYTES', 3.5 * 1024 * 1024);
+if (!defined('AI_JPEG_QUALITY'))    define('AI_JPEG_QUALITY',    75);   // سرعت بالا + کیفیت قابل قبول برای AI
 
 /**
  * فرمت‌هایی که مدل واقعاً می‌خونه. HEIC نه!
