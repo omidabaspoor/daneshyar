@@ -49,8 +49,11 @@ $ogImage        = $ogImage ?? ($seoDomain . '/assets/img/logo.png');
 <link rel="stylesheet" href="<?= BASE_URL ?>/assets/vendor/fonts/vazirmatn.css">
 
 <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=11">
-<?php if (!empty($extraCss)) foreach ($extraCss as $c): ?>
-<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/<?= e($c) ?>?v=16">
+<?php if (!empty($extraCss)) foreach ($extraCss as $c):
+  $cssHref = BASE_URL . '/assets/css/' . ltrim((string)$c, '/');
+  if (strpos((string)$c, '?') === false) $cssHref .= '?v=16';
+?>
+<link rel="stylesheet" href="<?= e($cssHref) ?>">
 <?php endforeach; ?>
 
 <link rel="icon" type="image/png" sizes="32x32" href="<?= BASE_URL ?>/assets/img/favicon-32x32.png">

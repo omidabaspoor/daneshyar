@@ -102,7 +102,7 @@ const tests = [
   { id: 'tables', title: 'جداول اصلی' },
   { id: 'ai', title: 'هوش مصنوعی (تست واقعی اما ارزان)' },
   { id: 'upload', title: 'سیستم آپلود عکس' },
-  { id: 'upload_queue', title: 'تست صف آپلود (۱۰ کاربر همزمان)' },
+  { id: 'upload_queue', title: 'تست صف آپلود (۱۵ کاربر همزمان)' },
   { id: 'plans', title: 'پلن‌های اشتراک' },
   { id: 'scheduler', title: 'زمان‌بندی اشتراک' },
   { id: 'resources', title: 'منابع سرور' }

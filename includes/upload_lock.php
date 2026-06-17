@@ -3,17 +3,18 @@
  * ============================================================
  *  دانش‌یار - قفل همزمان پردازش تصویر (File-based Semaphore)
  *
- *  هاست: ۱ هسته CPU | ۱ گیگ RAM
- *  - حداکثر ۳ پردازش تصویر همزمان (بقیه صف می‌شن)
- *  - ۴۵ ثانیه timeout = ۱۲ نفر × ~۳-۴ ثانیه پردازش = همه رد می‌شن
- *  - شستشوی خودکار قفل‌های مرده
+ *  هاست فعلی: ۳ هسته CPU | ۳ گیگ RAM
+ *  - حداکثر ۱۵ پردازش تصویر همزمان برای روز امتحان
+ *  - timeout کوتاه‌تر برای اینکه دانش‌آموز معطل صف طولانی نشود
+ *  - شستشوی خودکار قفل‌های مرده و lockهای جاماندهٔ PHP-FPM
  * ============================================================
  */
 
-// ⚠ ۱ هسته = فقط ۱ پردازش واقعاً همزمان روی CPU
-// ۳ تا می‌ذاریم چون GD resize سریع تموم می‌شه
-define('MAX_CONCURRENT_IMAGE_PROC', 7);      // حداکثر ۷ پردازش همزمان (امن برای ۳ هسته)
-define('IMAGE_PROC_WAIT_TIMEOUT', 90);         // حداکثر ۹۰ ثانیه صبر
+// سرور فعلی: ۳ هسته / ۳ گیگ رم و حدود ۱۰ تا ۱۵ کاربر همزمان.
+// پردازش بیشتر عکس‌ها سبک است (معمولاً ۳۰۰ تا ۴۰۰ کیلوبایت)، پس صف را بازتر می‌گذاریم.
+// اگر هاست ضعیف‌تر شد، این عدد را به ۷ تا ۱۰ برگردان.
+define('MAX_CONCURRENT_IMAGE_PROC', 15);      // حداکثر ۱۵ پردازش تصویر همزمان
+define('IMAGE_PROC_WAIT_TIMEOUT', 25);        // حداکثر ۲۵ ثانیه صبر؛ برای UX امتحانی سریع‌تر
 define('IMAGE_PROC_LOCK_DIR', '');
 
 function _lock_dir() {
@@ -40,18 +41,25 @@ function acquire_image_proc_lock($waitTimeout = IMAGE_PROC_WAIT_TIMEOUT) {
             foreach (scandir($locksDir) as $f) {
                 if (!preg_match('/^proc_(\d+)\.lock$/', $f, $m)) continue;
                 $lockPid = (int)$m[1];
+                $lockPath = $locksDir . '/' . $f;
+                $lockTime = @filemtime($lockPath) ?: 0;
 
-                if ($lockPid === $pid) {
-                    $myLock = $locksDir . '/' . $f;
+                // اگر از نسخه قبلی lock جامانده باشد، ممکن است PID هنوز زنده باشد (PHP-FPM idle)
+                // ولی پردازشی در کار نباشد؛ پس lockهای قدیمی را با سن فایل پاک می‌کنیم.
+                if ($lockTime > 0 && ($now - $lockTime) > 180) {
+                    @unlink($lockPath);
                     continue;
                 }
 
-                $lockPath = $locksDir . '/' . $f;
+                if ($lockPid === $pid) {
+                    $myLock = $lockPath;
+                    continue;
+                }
+
                 $isAlive = false;
                 if (function_exists('posix_getpgid')) {
                     $isAlive = @posix_getpgid($lockPid) !== false;
                 } else {
-                    $lockTime = @filemtime($lockPath) ?: 0;
                     $isAlive = ($now - $lockTime) < 60;
                 }
 
@@ -79,7 +87,7 @@ function acquire_image_proc_lock($waitTimeout = IMAGE_PROC_WAIT_TIMEOUT) {
             return false;
         }
 
-        usleep(200000); // 200ms - faster polling for better UX under load
+        usleep(100000); // 100ms - سریع‌تر برای صف کوتاهِ روز امتحان
     }
 }
 
@@ -107,15 +115,17 @@ function cleanup_dead_locks() {
         $lockPid = (int)$m[1];
         $isDead = true;
 
-        if (function_exists('posix_getpgid')) {
+        $lockPath = $locksDir . '/' . $f;
+        $lockTime = @filemtime($lockPath) ?: 0;
+        if ($lockTime > 0 && ($now - $lockTime) > 180) {
+            $isDead = true;
+        } elseif (function_exists('posix_getpgid')) {
             $isDead = @posix_getpgid($lockPid) === false;
         } else {
-            $lockPath = $locksDir . '/' . $f;
-            $lockTime = @filemtime($lockPath) ?: 0;
             $isDead = ($now - $lockTime) >= 60;
         }
 
-        if ($isDead) @unlink($locksDir . '/' . $f);
+        if ($isDead) @unlink($lockPath);
     }
 }
 

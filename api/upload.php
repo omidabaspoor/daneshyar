@@ -11,6 +11,7 @@
  */
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/image_helper.php';
+require_once __DIR__ . '/../includes/upload_lock.php';
 
 // محدودیت‌های کمتر برای آپلود (هاست‌های اشتراکی)
 @set_time_limit(180);
@@ -22,12 +23,6 @@ $user = current_user();
 if (!$user) json_response(['ok'=>false,'error'=>'ابتدا وارد شو.'], 401);
 if (is_banned($user)) json_response(['ok'=>false,'error'=>'حساب شما مسدود شده است.'], 403);
 if (!is_profile_complete($user)) json_response(['ok'=>false,'error'=>'برای ادامه استفاده، لطفاً از بخش پروفایل نام واقعی و نام مدرسه را تکمیل کن.'], 403);
-
-// ====================== قفل سبک - حداکثر ۷ پردازش همزمان ======================
-$lockAcquired = acquire_image_proc_lock(90);
-if (!$lockAcquired) {
-    json_response(['ok'=>false,'error'=>'سرور در حال پردازش عکس‌های دیگر کاربران است. لطفاً ۱۰ تا ۱۵ ثانیه صبر کنید.'], 429);
-}
 
 $csrfToken = $_POST['csrf'] ?? '';
 if (!csrf_check($csrfToken)) {
@@ -122,6 +117,21 @@ if (!move_uploaded_file($f['tmp_name'], $tmpDest)) {
 }
 @chmod($tmpDest, 0644);
 
+// قفل فقط برای مرحله پردازش تصویر گرفته می‌شود، نه کل آپلود/PDF.
+// روز امتحان: تا ۱۵ پردازش همزمان مجاز است؛ اگر صف پر شد، سریع خطا بده تا کاربر دوباره تلاش کند.
+$lockAcquired = acquire_image_proc_lock(25);
+if (!$lockAcquired) {
+    @unlink($tmpDest);
+    json_response(['ok'=>false,'error'=>'سرور شلوغ است؛ چند ثانیه دیگر دوباره عکس را بفرست.'], 429);
+}
+$GLOBALS['dy_upload_lock_acquired'] = true;
+register_shutdown_function(function () {
+    if (!empty($GLOBALS['dy_upload_lock_acquired'])) {
+        release_image_proc_lock();
+        $GLOBALS['dy_upload_lock_acquired'] = false;
+    }
+});
+
 // تبدیل HEIC و resize
 $prep = prepare_image_for_ai($tmpDest, $mime);
 if (!$prep['ok']) {
@@ -140,15 +150,17 @@ if ($info && ($info[0] < 10 || $info[1] < 10)) {
     json_response(['ok'=>false, 'error'=>'تصویر معتبر نیست.']);
 }
 
+if (!empty($GLOBALS['dy_upload_lock_acquired'])) {
+    release_image_proc_lock();
+    $GLOBALS['dy_upload_lock_acquired'] = false;
+}
+
 json_response([
     'ok'   => true,
     'path' => $relative,
     'type' => 'image',
     'mime' => $finalMime,
 ]);
-
-// آزادسازی قفل
-release_image_proc_lock();
 
 
 /* ===================== helpers محلی ===================== */

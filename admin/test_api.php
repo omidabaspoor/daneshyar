@@ -75,7 +75,7 @@ switch ($action) {
             $lock = @acquire_image_proc_lock(5);
             if ($lock) {
                 @release_image_proc_lock();
-                respond('ok', 'سیستم قفل آپلود فعال است', 'حداکثر ۴ پردازش همزمان مجاز است');
+                respond('ok', 'سیستم قفل آپلود فعال است', 'حداکثر ۱۵ پردازش تصویر همزمان مجاز است');
             } else {
                 respond('warning', 'قفل در حال استفاده', 'این حالت در زمان شلوغی عادی است');
             }
@@ -118,7 +118,7 @@ switch ($action) {
         respond('ok', "GD: $gd | Imagick: $imagick", "محدودیت حافظه: $memory");
         break;
 
-    // 8. تست واقعی صف آپلود (شبیه‌سازی واقعی ۱۰ کاربر همزمان)
+    // 8. تست واقعی صف آپلود (شبیه‌سازی واقعی ۱۵ کاربر همزمان)
     case 'upload_queue':
         try {
             require_once __DIR__ . '/../includes/upload_lock.php';
@@ -127,7 +127,7 @@ switch ($action) {
             $totalStart = microtime(true);
             $maxTestDuration = 90; // حداکثر ۹۰ ثانیه کل تست
 
-            for ($i = 1; $i <= 10; $i++) {
+            for ($i = 1; $i <= 15; $i++) {
                 // اگر کل تست خیلی طولانی شد، متوقف شو
                 if ((microtime(true) - $totalStart) > $maxTestDuration) {
                     $results[] = ['user' => $i, 'wait_ms' => 0, 'status' => 'aborted'];
@@ -168,7 +168,7 @@ switch ($action) {
             $avgWait = $successCount > 0 ? round(array_sum(array_column($results, 'wait_ms')) / $successCount) : 0;
             $maxWait = $successCount > 0 ? max(array_column($results, 'wait_ms')) : 0;
 
-            $detail = "۱۰ کاربر | موفق: $successCount | timeout: $timeoutCount | میانگین انتظار: {$avgWait}ms | بیشترین: {$maxWait}ms | زمان کل: {$totalTime}ms";
+            $detail = "۱۵ کاربر | موفق: $successCount | timeout: $timeoutCount | میانگین انتظار: {$avgWait}ms | بیشترین: {$maxWait}ms | زمان کل: {$totalTime}ms";
 
             if ($successCount >= 9) {
                 respond('ok', "صف آپلود عالی کار می‌کند ($successCount/۱۰ موفق)", $detail);

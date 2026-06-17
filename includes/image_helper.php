@@ -19,9 +19,11 @@
  * ============================================================
  */
 
-if (!defined('AI_MAX_IMAGE_DIM'))   define('AI_MAX_IMAGE_DIM',   1200); // بهینه‌سازی قوی برای سرعت (۲۰ کاربر همزمان)
-if (!defined('AI_MAX_IMAGE_BYTES')) define('AI_MAX_IMAGE_BYTES', 3.5 * 1024 * 1024);
-if (!defined('AI_JPEG_QUALITY'))    define('AI_JPEG_QUALITY',    75);   // سرعت بالا + کیفیت قابل قبول برای AI
+// حالت امتحانی: برای خواندن متن ریز زیست/هندسه از روی عکس، ۱۲۰۰px کم بود.
+// ۱۸۰۰px تعادل خوبی بین دقت OCR و سرعت/حجم روی سرور ۳ هسته / ۳ گیگ است.
+if (!defined('AI_MAX_IMAGE_DIM'))   define('AI_MAX_IMAGE_DIM',   1800);
+if (!defined('AI_MAX_IMAGE_BYTES')) define('AI_MAX_IMAGE_BYTES', 4.5 * 1024 * 1024);
+if (!defined('AI_JPEG_QUALITY'))    define('AI_JPEG_QUALITY',    82);
 
 /**
  * فرمت‌هایی که مدل واقعاً می‌خونه. HEIC نه!

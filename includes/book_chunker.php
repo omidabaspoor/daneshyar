@@ -717,6 +717,70 @@ function cap($chunks, $max = 12000) {
     return $r;
 }
 
+/**
+ * کانتکست گسترده و متوازن برای روز امتحان.
+ * وقتی سؤال از روی عکس/PDF می‌آید، متن سؤال را قبل از ارسال به مدل نداریم؛
+ * پس جستجوی کلمه‌ای RAG ممکن است chunk درست را پیدا نکند. این تابع از همهٔ
+ * فصل‌ها/درس‌ها یک سهم کوتاه و مرتب می‌فرستد تا مدل برای آزمون‌های چندسؤالی
+ * (مثل زیست ۴۰ سؤالی) به کل کتاب دسترسی سریع داشته باشد.
+ */
+function exam_context_chunks($bookId, $maxChars = 35000, $maxChunks = 80) {
+    ensure_book_chunks_schema();
+    $bookId = (int)$bookId;
+    if ($bookId <= 0) return [];
+
+    $chunks = [];
+    try {
+        $st = db()->prepare("SELECT * FROM book_chunks WHERE book_id=? ORDER BY chunk_index ASC LIMIT ?");
+        $st->execute([$bookId, (int)$maxChunks]);
+        $chunks = $st->fetchAll();
+    } catch (Throwable $e) { $chunks = []; }
+
+    // اگر chunk ساخته نشده بود ولی cached_text داریم، همان را سریع chunk کن.
+    if (empty($chunks)) {
+        try {
+            $st = db()->prepare("SELECT cached_text FROM books WHERE id=?");
+            $st->execute([$bookId]);
+            $txt = trim((string)($st->fetch()['cached_text'] ?? ''));
+            if (mb_strlen($txt, 'UTF-8') > 100) $chunks = chunk_book_text($txt);
+        } catch (Throwable $e) {}
+    }
+
+    if (empty($chunks)) return [];
+    return balanced_cap_chunks($chunks, (int)$maxChars);
+}
+
+function balanced_cap_chunks($chunks, $maxChars = 35000) {
+    $maxChars = max(4000, (int)$maxChars);
+    $total = 0;
+    foreach ($chunks as $c) $total += mb_strlen((string)($c['content'] ?? ''), 'UTF-8');
+    if ($total <= $maxChars) return $chunks;
+
+    $n = max(1, count($chunks));
+    $perChunk = max(350, (int)floor(($maxChars - ($n * 60)) / $n));
+    $out = [];
+    $used = 0;
+
+    foreach ($chunks as $c) {
+        $content = trim((string)($c['content'] ?? ''));
+        if ($content === '') continue;
+
+        $slice = mb_substr($content, 0, $perChunk, 'UTF-8');
+        if (mb_strlen($content, 'UTF-8') > $perChunk) {
+            $slice = rtrim(trim_sentence($slice));
+            $slice .= "\n… [ادامهٔ این بخش برای سرعت کوتاه شد]";
+        }
+
+        $c['content'] = $slice;
+        $len = mb_strlen($slice, 'UTF-8');
+        if ($used + $len > $maxChars && !empty($out)) break;
+        $out[] = $c;
+        $used += $len;
+    }
+
+    return $out ?: array_slice($chunks, 0, 1);
+}
+
 
 // ============================================================
 //  ساخت context برای prompt

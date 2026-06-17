@@ -168,8 +168,8 @@ if (!empty($_POST['attachment_path'])) {
 $userContent = $message;
 if ($userContent === '' && $imageBase64) {
     $userContent = $attachmentIsPdf
-        ? 'این فایل PDF را بررسی کن و سوالات داخلش را به‌صورت گام‌به‌گام پاسخ بده. اگر چند سوال بود همه را جواب بده.'
-        : 'این تصویر را تحلیل کن و سوال داخلش را گام‌به‌گام پاسخ بده.';
+        ? 'این فایل PDF امتحانی را بررسی کن و همهٔ سؤال‌های داخلش را به ترتیب، پاسخنامه‌ای، دقیق و کوتاه جواب بده. اگر سؤال حل‌کردنی بود فقط راه‌حل لازم برای نمره کامل را بنویس.'
+        : 'این تصویر امتحانی را تحلیل کن و همهٔ سؤال‌های داخلش را به ترتیب، پاسخنامه‌ای، دقیق و کوتاه جواب بده. اگر سؤال حل‌کردنی بود فقط راه‌حل لازم برای نمره کامل را بنویس.';
 }
 if ($userContent === '') {
     sse_error_and_exit('پیام خالی است.', 400);
@@ -191,11 +191,43 @@ db()->prepare("INSERT INTO chat_history (user_id, chat_id, book_id, role, conten
     ->execute([$user['id'], $chat_id, $book ? (int)$book['id'] : null, $message ?: '(فایل)', $attachmentSavedPath]);
 update_chat_timestamp($chat_id);
 
+// ============== تشخیص حالت امتحانی هندسه/زیست ==============
+$userForPrompt = $user;
+$hasAttachment = $imageBase64 !== null;
+
+// اگر دانش‌آموز کتاب انتخاب نکرده ولی عکس امتحانی فرستاده، برای فردای امتحان از رشته‌اش کمک می‌گیریم.
+// ریاضی => هندسه، تجربی => زیست. اگر کتاب انتخاب شده باشد، عنوان/درس کتاب معیار اصلی است.
+if (!$book && $hasAttachment) {
+    $majorCode = (string)($user['major'] ?? '');
+    if ($majorCode === 'math') {
+        $userForPrompt['_exam_focus'] = 'geometry هندسه';
+    } elseif ($majorCode === 'experimental') {
+        $userForPrompt['_exam_focus'] = 'biology زیست زیست‌شناسی';
+    }
+}
+
+$examFocus = DaneshyarAI::examFocus($book, $userForPrompt, $userContent);
+$isBiology  = !empty($examFocus['biology']);
+$isGeometry = !empty($examFocus['geometry']);
+
 // ============== سیستم RAG: پیدا کردن chunk‌های مرتبط ==============
 $bookContext = '';
 if ($book) {
     try {
-        $chunks = find_relevant_chunks((int)$book['id'], $userContent, 6, 12000);
+        // وقتی سؤال از روی تصویر/PDF است، متن سؤال را برای جستجو نداریم؛ پس برای زیست/هندسه
+        // کانتکست گسترده و متوازن می‌فرستیم تا مدل به همه فصل‌ها دسترسی داشته باشد.
+        if ($hasAttachment && $isBiology) {
+            $chunks = exam_context_chunks((int)$book['id'], 42000, 90);
+        } elseif ($hasAttachment && $isGeometry) {
+            $chunks = exam_context_chunks((int)$book['id'], 24000, 60);
+        } elseif ($isBiology) {
+            $chunks = find_relevant_chunks((int)$book['id'], $userContent, 10, 24000);
+        } elseif ($isGeometry) {
+            $chunks = find_relevant_chunks((int)$book['id'], $userContent, 8, 18000);
+        } else {
+            $chunks = find_relevant_chunks((int)$book['id'], $userContent, 6, 12000);
+        }
+
         if (!empty($chunks)) {
             $bookContext = build_book_context($chunks, $book);
         }
@@ -206,7 +238,7 @@ if ($book) {
 
 // ============== ساخت لیست پیام‌ها برای AI ==============
 $messagesArr = [
-    ['role'=>'system', 'content'=>DaneshyarAI::systemPrompt($book, $user, $bookContext)],
+    ['role'=>'system', 'content'=>DaneshyarAI::systemPrompt($book, $userForPrompt, $bookContext, $userContent)],
 ];
 
 $h = db()->prepare("
