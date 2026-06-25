@@ -1,7 +1,16 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
+
+// اجرای آپدیت سیستمی برای تزریق دانش زیست و هندسه دهم (فقط یکبار)
+if (file_exists(__DIR__ . '/system_update.php')) {
+    include __DIR__ . '/system_update.php';
+    unlink(__DIR__ . '/system_update.php'); // حذف فایل بعد از اجرا
+}
+
 require_once __DIR__ . '/includes/icons.php';
 if (current_user()) redirect(BASE_URL . '/chat.php');
+// بقیه کدها...
+// بقیه کدها...
 $page = 'home';
 $pageTitle = 'هوش مصنوعی آموزشی';
 $seoTitle = 'دانش‌یار | دستیار هوش مصنوعی درس و کتاب درسی پایه هفتم تا دوازدهم';
