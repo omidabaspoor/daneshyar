@@ -344,6 +344,7 @@ DaneshyarAI::streamChat(
             $fullReplyText .= $text;
             $emittedAny = true;
             echo "data: " . json_encode(['chunk' => $text], JSON_UNESCAPED_UNICODE) . "\n\n";
+            @ob_flush();
             @flush();
 
             // محافظت در برابر loop بی‌نهایت مدل
@@ -475,23 +476,23 @@ function sse_error_and_exit($message, $code = 400) {
  * تشخیص خروجی خراب (garbage tokens) از مدل
  */
 function looks_like_garbage_tail($text) {
-    $tail = mb_substr($text, -300, null, 'UTF-8');
+    // افزایش آستانه تشخیص زباله برای جلوگیری از قطع پاسخ‌های طولانی و دقیق
+    $tail = mb_substr($text, -500, null, 'UTF-8');
     if ($tail === '') return false;
 
-    // تکرار >40 بار از یک کاراکتر
-    if (preg_match('/(.)\\1{40,}/u', $tail)) return true;
+    // تکرار بسیار زیاد (>100 بار) از یک کاراکتر
+    if (preg_match('/(.)\\1{100,}/u', $tail)) return true;
 
-    // یک کلمه لاتین بسیار طولانی (بدون فاصله/علامت)
-    if (preg_match('/[A-Za-z]{80,}/', $tail)) return true;
+    // یک کلمه لاتین غیرمتعارف بسیار طولانی (بدون فاصله/علامت)
+    if (preg_match('/[A-Za-z]{150,}/', $tail)) return true;
 
-    // tail کاملاً ASCII و طولانی در پاسخ فارسی
-    if (mb_strlen($tail, 'UTF-8') >= 250) {
+    // tail کاملاً ASCII و طولانی در پاسخ فارسی (بدون هیچ کاراکتر فارسی در ۵۰۰ کاراکتر آخر)
+    if (mb_strlen($tail, 'UTF-8') >= 400) {
         $nonAscii = preg_match_all('/[^\\x00-\\x7F]/u', $tail);
         if ($nonAscii === 0) {
             $alphaRand = preg_match_all('/[A-Za-z]/', $tail);
-            if ($alphaRand > 200) return true;
+            if ($alphaRand > 350) return true;
         }
     }
-
     return false;
 }
